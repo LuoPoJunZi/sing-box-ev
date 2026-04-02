@@ -309,6 +309,10 @@ footer_msg() { ui_footer_msg; }
 
 url_qr() { query_url_qr "$@"; }
 
+manage() { runtime_manage "$@"; }
+
+cron_task() { runtime_cron_task; }
+
 update() { admin_update "$@"; }
 
 uninstall() { admin_uninstall "$@"; }

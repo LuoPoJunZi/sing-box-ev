@@ -88,7 +88,7 @@ if [[ ! -f $is_tls_cer || ! -f $is_tls_key ]]; then
     rm -f "$is_tls_tmp"
 fi
 
-if pgrep -f "$is_core_bin" >/dev/null; then
+if systemctl is-active --quiet "$is_core" 2>/dev/null || pgrep -f "$is_core_bin" >/dev/null; then
     is_core_status=$(_green "running")
 else
     is_core_status=$(_red_bg "stopped")
@@ -108,7 +108,7 @@ if [[ -f $is_caddy_bin && -d $is_caddy_dir && $is_caddy_service ]]; then
     [[ $is_tmp_http_port ]] && is_http_port=$is_tmp_http_port
     [[ $is_tmp_https_port ]] && is_https_port=$is_tmp_https_port
     
-    if pgrep -f "$is_caddy_bin" >/dev/null; then
+    if systemctl is-active --quiet caddy 2>/dev/null || pgrep -f "$is_caddy_bin" >/dev/null; then
         is_caddy_status=$(_green "running")
     else
         is_caddy_status=$(_red_bg "stopped")
