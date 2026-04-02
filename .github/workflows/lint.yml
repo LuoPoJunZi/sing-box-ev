@@ -1,0 +1,49 @@
+name: Shell Lint
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "*.sh"
+      - "src/**/*.sh"
+      - ".github/workflows/lint.yml"
+  pull_request:
+    paths:
+      - "*.sh"
+      - "src/**/*.sh"
+      - ".github/workflows/lint.yml"
+  workflow_dispatch:
+
+jobs:
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck
+        run: |
+          find . -type f -name "*.sh" -not -path "./.git/*" -print0 | xargs -0 shellcheck
+
+  shfmt:
+    name: shfmt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup shfmt
+        uses: mfinelli/setup-shfmt@v3
+        with:
+          shfmt-version: "3.8.0"
+
+      - name: Check formatting
+        run: |
+          shfmt -d -i 4 -ci -sr install.sh sing-box.sh src

@@ -1,0 +1,63 @@
+name: Auto Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+  workflow_dispatch: # 手动触发按钮
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Extract Version
+        id: get_version
+        run: |
+          # 放宽正则容错率，并加入 || echo "" 防止 grep 找不到时直接崩溃
+          VERSION=$(grep -oP 'is_sh_ver="\K[^"]+' src/init.sh | head -n 1 || echo "")
+          
+          if [ -z "$VERSION" ]; then
+            echo "❌ 致命错误：无法在 src/init.sh 中找到 is_sh_ver 变量！请检查拼写。"
+            exit 1
+          fi
+          
+          echo "成功提取到版本号: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+
+      - name: Check if Release is Needed
+        id: check_release
+        run: |
+          if [ "${{ env.VERSION }}" == "${{ env.LATEST_TAG }}" ]; then
+            echo "版本 ${{ env.VERSION }} 已存在，无需发布新 Release。自动跳过。"
+            echo "should_release=false" >> $GITHUB_ENV
+          else
+            echo "检测到新版本: ${{ env.VERSION }}。准备自动发布！"
+            echo "should_release=true" >> $GITHUB_ENV
+          fi
+
+      - name: Package Code
+        if: env.should_release == 'true'
+        # 将压缩包先生成在上一层目录，彻底避开“文件正在变化”的冲突，然后再移回来
+        run: |
+          tar --exclude=".git" --exclude=".github" -zcvf ../code.tar.gz .
+          mv ../code.tar.gz ./
+
+      - name: Create Release
+        if: env.should_release == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: code.tar.gz
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
+          body: "🤖 自动化构建发布版本: ${{ env.VERSION }}"
