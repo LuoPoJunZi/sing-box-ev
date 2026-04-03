@@ -2,29 +2,33 @@
 
 [中文文档](./README.md) | English
 
-Sing-box-EV is a Linux-focused management script project for `sing-box`.
+Sing-box-EV is a Linux server management script project for `sing-box`.
 It provides:
 
 - One-click install and update
-- TUI menu + CLI commands
+- TUI menu + CLI shortcuts
 - Multi-protocol node management (including Reality / AnyTLS / CFtunnel)
-- Subscription export
-- Basic ops automation (service management, log cleanup, cron tasks)
+- Subscription export tools
+- Basic ops automation (service control, log cleanup, cron tasks)
 
-This file is written for developers who want to quickly understand and contribute.
+This README is written for two audiences:
+
+- Users: install and manage nodes quickly
+- Developers: start contributing even on first contact with this codebase
 
 ---
 
-## 1. Highlights
+## 1. Feature Overview
 
 - 20+ protocols and combinations
 - Menu-driven and command-driven workflows
-- Reality domain pool with health checks, weighted selection, and region preference
+- Subscription export (Base64 / temporary web endpoint)
+- Reality domain pool management (health checks, weight, region)
 - Cloudflare Tunnel support for no-public-IP scenarios
 
 ---
 
-## 2. Runtime Requirements
+## 2. Environment Requirements
 
 ### 2.1 Server Runtime
 
@@ -33,6 +37,7 @@ This file is written for developers who want to quickly understand and contribut
 - CentOS 7+
 - Architecture: `x86_64` / `arm64`
 - Root user required
+- Typical dependencies: `wget` `curl` `tar` `jq` (installer will try to install)
 
 ### 2.2 Development Environment
 
@@ -41,11 +46,11 @@ This file is written for developers who want to quickly understand and contribut
   - `shellcheck`
   - `shfmt`
 - Optional:
-  - A test VPS for real integration checks
+  - A test VPS for integration checks
 
 ---
 
-## 3. Install (User Side)
+## 3. Quick Install (User)
 
 ```bash
 bash <(curl -s -L https://raw.githubusercontent.com/LuoPoJunZi/sing-box-ev/main/install.sh)
@@ -57,7 +62,7 @@ Fallback:
 bash <(curl -s -L https://github.com/LuoPoJunZi/sing-box-ev/raw/main/install.sh)
 ```
 
-Common commands:
+Common startup commands:
 
 ```bash
 sb
@@ -68,7 +73,7 @@ sb status
 
 ---
 
-## 4. CLI Quick Reference
+## 4. Common Commands (User)
 
 | Command | Description |
 | --- | --- |
@@ -81,14 +86,14 @@ sb status
 | `sb log` | Tail runtime logs |
 | `sb update` | Update core/script |
 | `sb domain list` | List Reality domain pool |
-| `sb domain add <domain> [weight] [region]` | Add domain |
-| `sb domain del <domain>` | Remove/disable domain |
-| `sb domain test [region] [domain]` | Health check |
+| `sb domain add <domain> [weight] [region]` | Add a domain |
+| `sb domain del <domain>` | Remove/disable a domain |
+| `sb domain test [region] [domain]` | Run health checks |
 | `sb domain pick [region]` | Preview selected domain |
 
 ---
 
-## 5. Repository Layout
+## 5. Repository Structure (Developer)
 
 ```text
 .
@@ -120,145 +125,171 @@ sb status
    └─ release.yml
 ```
 
----
+### 5.1 Module Responsibility Quick Map
 
-## 6. Module Responsibilities
-
-- `00_env.sh`: shared constants and defaults
-- `10_ui.sh`: output helpers
+- `00_env.sh`: constants and defaults
+- `10_ui.sh`: output and UI helpers
 - `20_validate.sh`: input/port validation
-- `25_domain.sh`: Reality domain pool and strategy
-- `30_runtime.sh`: service/cron operations
-- `40_node_query.sh`: read/query/display/URL
-- `50_node_write.sh`: create/change/delete
+- `25_domain.sh`: Reality domain pool strategy
+- `30_runtime.sh`: service and cron operations
+- `40_node_query.sh`: query/display/URL generation
+- `50_node_write.sh`: create/change/delete logic
 - `60_sub.sh`: subscription generation
-- `70_admin.sh`: CLI/menu dispatch
+- `70_admin.sh`: command/menu dispatch
 
 ---
 
-## 7. Request Flow
+## 6. Execution Flow (Fastest Way to Understand)
 
-For `sb add reality`:
+For `sb add reality`, the call chain is:
 
 1. `sing-box.sh` receives CLI args
-2. `src/init.sh` initializes environment
-3. `src/core.sh` loads modules and wrappers
-4. `src/core/70_admin.sh` dispatches command
-5. `src/core/50_node_write.sh` writes config
-6. `src/core/40_node_query.sh` renders info and URL
+2. `src/init.sh` initializes runtime variables and loads core
+3. `src/core.sh` loads modules and compatibility wrappers
+4. `src/core/70_admin.sh` dispatches the command
+5. `src/core/50_node_write.sh` handles write path
+6. `src/core/40_node_query.sh` handles render/URL path
 
 Rule of thumb:
 
 - Dispatch in `70_admin.sh`
 - Write logic in `50_node_write.sh`
 - Read/display logic in `40_node_query.sh`
+- Keep concerns separated in PRs
 
 ---
 
-## 8. Developer Onboarding (First 30 Minutes)
+## 7. New Contributor Workflow (Recommended)
 
-1. Read:
-   - `README.md`
-   - `CONTRIBUTING.md`
-   - `src/core/README.md`
-2. Start with dispatch file:
-   - `src/core/70_admin.sh`
-3. Then jump to your target module (`40` / `50` / `25` etc.)
+### 7.1 First Read Order
 
-### First feature change checklist
+1. `README.md`
+2. `CONTRIBUTING.md`
+3. `src/core/README.md`
+4. `src/core/70_admin.sh`
+5. Target module (`50_node_write.sh`, etc.)
 
-- Update command routing (`70_admin.sh`) if needed
-- Update write path (`50_node_write.sh`)
-- Update read/display path (`40_node_query.sh`)
-- Update defaults (`00_env.sh`) if needed
-- Update help docs (`src/help.sh`)
+### 7.2 First Change Pattern
 
----
+Example: changing Reality add behavior
 
-## 9. Quality Checks
+1. Check command routing in `70_admin.sh`
+2. Edit input/write logic in `50_node_write.sh`
+3. Sync render and URL in `40_node_query.sh`
+4. Update defaults in `00_env.sh` if needed
+5. Update docs in `src/help.sh`
+
+### 7.3 Local Checks
 
 ```bash
 bash scripts/lint.sh
 bash scripts/smoke.sh
-```
-
-Optional integration check:
-
-```bash
+# Optional on test host:
 bash scripts/smoke-reality.sh
 ```
 
-Note: `smoke-reality.sh` creates and removes test Reality nodes. Run it on a test host.
+`smoke-reality.sh` creates and removes Reality test nodes; run it on test environments only.
 
 ---
 
-## 10. Reality Domain Pool Notes
+## 8. Reality Domain Pool Development Notes
 
-`src/core/25_domain.sh` includes:
+`25_domain.sh` provides:
 
-- Pool merge (built-in + custom)
-- Weighted random selection
-- Region preference (`us` / `eu` / `apac` / `global`)
-- Health checks and cache
-- Recent-domain avoidance
+1. Pool aggregation: built-in + custom domains
+2. Weighted selection: high weight has higher chance
+3. Health probing: DNS / TCP443 / TLS handshake (degrades by available tools)
+4. Recent avoidance: reduce repeated SNI reuse
 
-Persistent files are stored under `$is_sh_dir` (usually `/etc/sing-box/sh`).
+Data files are stored under `$is_sh_dir` (usually `/etc/sing-box/sh`):
+
+- `domain_custom.list`
+- `domain_disabled.list`
+- `domain_health.cache`
+- `domain_recent.list`
+
+If you extend selection strategy, prioritize adding it in `25_domain.sh` instead of scattering logic in query/write modules.
 
 ---
 
-## 11. CI and Release
+## 9. CI, Release, and Versioning
 
-### CI
+### 9.1 CI
 
 - Workflow: `.github/workflows/lint.yml`
-- Runs `shellcheck` and `shfmt`
+- Checks: `shellcheck` + `shfmt`
 
-### Release
+### 9.2 Release
 
 - Workflow: `.github/workflows/release.yml`
 - Version source: `is_sh_ver` in `src/init.sh`
-- Creates release when tag is new
+- Auto-release runs when version tag is new
 
-Before release:
+Before release, verify:
 
-1. bump `is_sh_ver`
-2. run local checks
-3. keep README/help in sync with behavior
+1. `is_sh_ver` is updated
+2. local lint/smoke checks pass
+3. README/help docs reflect behavior
 
 ---
 
-## 12. Common Tasks: Where to Edit
+## 10. Where to Edit for Common Dev Tasks
 
-### Add a command
+### Add a new command
 
-- `src/core/70_admin.sh`
-- `src/help.sh`
-- optional wrapper in `src/core.sh`
+- Routing: `src/core/70_admin.sh`
+- Help docs: `src/help.sh`
+- Optional wrapper: `src/core.sh`
 
 ### Add/change protocol fields
 
-- defaults: `src/core/00_env.sh`
-- write path: `src/core/50_node_write.sh`
-- display/URL path: `src/core/40_node_query.sh`
-- validation: `src/core/20_validate.sh`
+- Defaults: `src/core/00_env.sh`
+- Write path: `src/core/50_node_write.sh`
+- Display/URL path: `src/core/40_node_query.sh`
+- Validation: `src/core/20_validate.sh`
 
-### Runtime behavior
+### Change runtime behavior
 
-- service/cron control: `src/core/30_runtime.sh`
-- service template/download: `src/utils.sh`
-
----
-
-## 13. Troubleshooting (Dev)
-
-- Command not visible: check `70_admin.sh` routing and `core.sh` wrapper
-- URL mismatch with config: check both `50_node_write.sh` and `40_node_query.sh`
-- Lint passes but runtime fails: verify runtime deps (`jq`, `openssl`, `timeout`) on real Linux host
+- Service/cron operations: `src/core/30_runtime.sh`
+- Service templates/download logic: `src/utils.sh`
 
 ---
 
-## 14. Contributing & License
+## 11. FAQ (Developer View)
+
+### Q1: I changed a command but it does not show up.
+
+Check command dispatch in `70_admin.sh` and wrapper exposure in `core.sh`.
+
+### Q2: Config is correct but URL output is wrong.
+
+Write logic is in `50_node_write.sh`; URL rendering is in `40_node_query.sh`. Both may require updates.
+
+### Q3: Lint passes but runtime fails.
+
+This project depends on runtime tools (`jq`, `openssl`, `timeout`, etc.). Validate on a real Linux host.
+
+### Q4: I want to disable one Reality domain quickly.
+
+```bash
+sb domain del example.com
+```
+
+For built-in domains, this writes to disable list without source edits.
+
+---
+
+## 12. Security and Ops Reminders
+
+- Do not run unknown scripts on production hosts
+- Double-check changes touching `rm -rf`, `systemctl disable`, or `crontab -`
+- In PRs, include risk and rollback notes for operational changes
+
+---
+
+## 13. Contribution and Acknowledgements
 
 - Contribution guide: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Upstream core: `SagerNet/sing-box`
+- This project is a refactor/extension built on the 233boy ecosystem
 - License: GPL v3
-- Core upstream: `SagerNet/sing-box`
