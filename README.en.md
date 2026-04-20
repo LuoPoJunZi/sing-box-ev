@@ -86,6 +86,7 @@ sb status
 | `sb log` | Tail runtime logs |
 | `sb update` | Update core/script |
 | `sb doctor` | Run system diagnostics (service/config/network) |
+| `sb dry-run <command> [args...]` | Preview command without applying writes/restarts |
 | `sb backup list` | List configuration snapshots |
 | `sb backup create [reason]` | Create a snapshot manually |
 | `sb rollback [snapshot_id]` | Roll back to a snapshot |

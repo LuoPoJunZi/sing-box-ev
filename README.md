@@ -85,6 +85,7 @@ sb status   # 查看运行状态
 | `sb log` | 查看日志 |
 | `sb update` | 更新核心/脚本 |
 | `sb doctor` | 系统诊断（服务/配置/网络） |
+| `sb dry-run <command> [args...]` | 预演命令，不执行写入/重启 |
 | `sb backup list` | 查看配置快照 |
 | `sb backup create [reason]` | 手动创建快照 |
 | `sb rollback [snapshot_id]` | 回滚到快照 |

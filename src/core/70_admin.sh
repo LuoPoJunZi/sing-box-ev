@@ -139,7 +139,7 @@ admin_is_main_menu() {
         show_help
         ;;
     9)
-        ask list is_do_other "节点订阅(Sub) 一键查看所有节点信息 启用BBR 查看日志 测试运行 重装脚本 设置DNS 手动更新 系统诊断(doctor)" "" "\n请选择进阶工具:"
+        ask list is_do_other "节点订阅(Sub) 一键查看所有节点信息 启用BBR 查看日志 测试运行 重装脚本 设置DNS 手动更新 系统诊断(doctor) 查看快照列表 手动创建快照 回滚快照" "" "\n请选择进阶工具:"
         case $REPLY in
         1) gen_sub ;;
         2) show_all_nodes ;;
@@ -155,6 +155,9 @@ admin_is_main_menu() {
             update $REPLY
             ;;
         9) doctor ;;
+        10) backup_list ;;
+        11) unset is_snapshot_id; snapshot_ensure "manual-menu" ;;
+        12) rollback ;;
         esac
         ;;
     10)
