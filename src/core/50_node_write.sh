@@ -45,6 +45,14 @@ write_create() {
         fi
 
         snapshot_ensure "write-create"
+        if [[ $is_dry_run ]]; then
+            msg "DRY-RUN: 将创建配置文件 -> $is_json_file"
+            msg "DRY-RUN: 协议=$is_new_protocol 端口=$port 备注=$safe_remark"
+            if [[ $host ]]; then msg "DRY-RUN: host=$host"; fi
+            if [[ $is_servername ]]; then msg "DRY-RUN: serverName=$is_servername"; fi
+            return
+        fi
+
         if [[ $is_config_file ]]; then
             is_no_del_msg=1
             del $is_config_file
@@ -324,6 +332,10 @@ write_del() {
     fi
     if [[ $is_config_file ]]; then
         snapshot_ensure "write-del"
+        if [[ $is_dry_run ]]; then
+            msg "DRY-RUN: 将删除配置文件 -> $is_conf_dir/$is_config_file"
+            return
+        fi
         if [[ $is_main_start && ! $is_no_del_msg ]]; then
             msg "\n是否删除配置文件?: $is_config_file"
             pause

@@ -60,6 +60,11 @@ admin_uninstall() {
         ask string y "是否卸载 ${is_core_name}? [y]: "
     fi
 
+    if [[ $is_dry_run ]]; then
+        msg "\nDRY-RUN: 将卸载 $is_core_name 及相关服务/目录（未实际执行）\n"
+        return
+    fi
+
     manage stop &>/dev/null
     manage disable &>/dev/null
     crontab -l 2>/dev/null | grep -v -E "sing-box update|/var/log/sing-box" | crontab -
@@ -160,6 +165,15 @@ admin_is_main_menu() {
 }
 
 admin_main() {
+    if [[ $1 == 'dry-run' || $1 == '--dry-run' || $1 == 'drun' ]]; then
+        is_dry_run=1
+        shift
+        if [[ ! $1 ]]; then
+            err "请使用: sb dry-run <command> [args...]"
+        fi
+        msg "\n已启用 DRY-RUN 模式，本次不会执行写入或服务变更.\n"
+    fi
+
     case $1 in
     a | add | gen | no-auto-tls)
         if [[ $1 == 'gen' ]]; then is_gen=1; fi

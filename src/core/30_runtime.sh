@@ -15,6 +15,12 @@ runtime_snapshot_ensure() {
         return
     fi
 
+    if [[ $is_dry_run ]]; then
+        is_snapshot_id="dryrun-$(date +%Y%m%d-%H%M%S)-${reason}"
+        msg "DRY-RUN: 将创建配置快照: $(_green $is_snapshot_id)"
+        return
+    fi
+
     backup_root="$(runtime_snapshot_dir)"
     mkdir -p "$backup_root"
 
@@ -67,6 +73,7 @@ runtime_snapshot_list() {
 
 runtime_snapshot_restore() {
     local backup_root target_id target_dir latest_id
+    local snapshot_items=()
     backup_root="$(runtime_snapshot_dir)"
     target_id="$1"
 
@@ -75,16 +82,34 @@ runtime_snapshot_restore() {
     fi
 
     if [[ ! $target_id ]]; then
-        latest_id="$(ls -1dt "$backup_root"/* 2>/dev/null | head -n 1)"
-        if [[ ! $latest_id ]]; then
+        mapfile -t snapshot_items < <(ls -1dt "$backup_root"/* 2>/dev/null | xargs -r -n 1 basename)
+        if [[ ${#snapshot_items[@]} -eq 0 ]]; then
             err "没有可回滚的快照."
         fi
-        target_id="$(basename "$latest_id")"
+
+        if [[ $is_dont_auto_exit ]]; then
+            target_id="${snapshot_items[0]}"
+        else
+            is_tmp_list=("${snapshot_items[@]}")
+            ask list target_id "" "\n请选择要回滚的快照:"
+            unset is_tmp_list
+        fi
     fi
 
     target_dir="$backup_root/$target_id"
     if [[ ! -d $target_dir ]]; then
         err "快照不存在: $target_id"
+    fi
+
+    if [[ $is_dry_run ]]; then
+        msg "\nDRY-RUN: 将执行回滚 -> $(_green $target_id)"
+        msg "DRY-RUN: 将恢复主配置: $is_config_json"
+        msg "DRY-RUN: 将恢复节点目录: $is_conf_dir"
+        if [[ $is_caddy && -d $target_dir/caddy-conf ]]; then
+            msg "DRY-RUN: 将恢复 Caddy 目录: $is_caddy_conf"
+        fi
+        msg "DRY-RUN: 将重启服务: $is_core $( [[ $is_caddy ]] && echo '和 caddy' )\n"
+        return
     fi
 
     # 回滚前再做一次保护性快照
@@ -120,6 +145,8 @@ runtime_doctor() {
     local domain_count=0
     local host_ip=""
     local dns_test=""
+    local fail_core_bin=0 fail_config=0 fail_conf_dir=0 fail_check=0
+    local warn_service=0 warn_caddy=0 warn_network=0 warn_dns=0
 
     msg "\n============= 系统诊断 (doctor) ============="
 
@@ -128,6 +155,7 @@ runtime_doctor() {
         ((ok++))
     else
         msg "[FAIL] 核心二进制不存在: $is_core_bin"
+        fail_core_bin=1
         ((fail++))
     fi
 
@@ -136,6 +164,7 @@ runtime_doctor() {
         ((ok++))
     else
         msg "[FAIL] 主配置缺失: $is_config_json"
+        fail_config=1
         ((fail++))
     fi
 
@@ -145,6 +174,7 @@ runtime_doctor() {
         ((ok++))
     else
         msg "[FAIL] 节点配置目录缺失: $is_conf_dir"
+        fail_conf_dir=1
         ((fail++))
     fi
 
@@ -153,6 +183,7 @@ runtime_doctor() {
         ((ok++))
     else
         msg "[WARN] 服务状态: $is_core 未运行"
+        warn_service=1
         ((warn_count++))
     fi
 
@@ -162,6 +193,7 @@ runtime_doctor() {
             ((ok++))
         else
             msg "[WARN] 服务状态: caddy 未运行"
+            warn_caddy=1
             ((warn_count++))
         fi
     fi
@@ -172,6 +204,7 @@ runtime_doctor() {
             ((ok++))
         else
             msg "[FAIL] 配置校验: sing-box check 未通过"
+            fail_check=1
             ((fail++))
         fi
     fi
@@ -182,6 +215,7 @@ runtime_doctor() {
         ((ok++))
     else
         msg "[WARN] 出站网络: 无法快速获取公网 IPv4"
+        warn_network=1
         ((warn_count++))
     fi
 
@@ -191,6 +225,7 @@ runtime_doctor() {
         ((ok++))
     else
         msg "[WARN] DNS over HTTPS: one.one.one.one 测试失败"
+        warn_dns=1
         ((warn_count++))
     fi
 
@@ -202,6 +237,28 @@ runtime_doctor() {
 
     msg "----------------------------------------------"
     msg "诊断结果: OK=$ok WARN=$warn_count FAIL=$fail"
+    if [[ $fail -gt 0 || $warn_count -gt 0 ]]; then
+        msg "------------- 建议修复动作 -------------"
+        if [[ $fail_core_bin -eq 1 ]]; then
+            msg "1) 核心缺失：尝试执行 sb update core 或重新安装脚本"
+        fi
+        if [[ $fail_config -eq 1 || $fail_conf_dir -eq 1 ]]; then
+            msg "2) 配置缺失：可用 sb rollback 恢复最近快照，或 sb backup list 先检查快照"
+        fi
+        if [[ $fail_check -eq 1 ]]; then
+            msg "3) 配置非法：先执行 sb backup create pre-fix，再用 sb fix-all / sb change 修复"
+        fi
+        if [[ $warn_service -eq 1 ]]; then
+            msg "4) 核心未运行：执行 sb start"
+        fi
+        if [[ $warn_caddy -eq 1 ]]; then
+            msg "5) Caddy 未运行：执行 sb start caddy"
+        fi
+        if [[ $warn_network -eq 1 || $warn_dns -eq 1 ]]; then
+            msg "6) 网络或 DNS 异常：检查服务器出站策略、DNS 解析与防火墙规则"
+        fi
+        msg "----------------------------------------"
+    fi
     msg "==============================================\n"
 }
 
@@ -217,6 +274,11 @@ runtime_manage() {
     caddy) is_do_name=$2; is_run_bin=$is_caddy_bin; is_do_name_msg=Caddy ;;
     *) is_do_name=$is_core; is_run_bin=$is_core_bin; is_do_name_msg=$is_core_name ;;
     esac
+
+    if [[ $is_dry_run ]]; then
+        msg "DRY-RUN: 将执行 systemctl $is_do $is_do_name"
+        return
+    fi
 
     systemctl $is_do $is_do_name
 

@@ -15,6 +15,7 @@ show_help() {
             "   pbk                                             同等于 $is_core generate reality-keypair"
             "   get-port                                        返回一个可用的端口\n"
             "一般:"
+            "   dry-run <command> [args...]                     预演模式(不执行写入/重启)"
             "   a, add [protocol] [args... | auto]              添加配置 (Reality 支持 --auto-sni)"
             "   c, change [name] [option] [args... | auto]      更改配置"
             "   d, del [name]                                   删除配置"
