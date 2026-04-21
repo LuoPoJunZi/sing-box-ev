@@ -54,6 +54,9 @@ download() {
             tar zxf $tmpfile -C $tmpdir
             cp -f $tmpdir/caddy $is_caddy_bin
             chmod +x $is_caddy_bin
+            managed_record file "$is_caddy_bin"
+            managed_record dir "$is_caddy_dir"
+            managed_record file /lib/systemd/system/caddy.service
             ;;
     esac
     rm -rf -- "$tmpdir"

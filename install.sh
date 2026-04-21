@@ -304,6 +304,19 @@ main() {
     }
 
     mkdir -p $is_sh_dir
+    cat > "$is_sh_dir/.install_manifest" << EOF
+dir|$is_core_dir
+dir|$is_sh_dir
+dir|$is_conf_dir
+dir|$is_log_dir
+file|$is_sh_bin
+file|${is_sh_bin/$is_core/sb}
+file|/lib/systemd/system/$is_core.service
+line|/root/.bashrc|alias sb=$is_sh_bin
+line|/root/.bashrc|alias $is_core=$is_sh_bin
+cron|sing-box update
+cron|/var/log/sing-box
+EOF
     if [[ $local_install ]]; then
         cp -rf $PWD/* $is_sh_dir
     else
@@ -323,7 +336,10 @@ main() {
     ln -sf $is_sh_dir/$is_core.sh $is_sh_bin
     ln -sf $is_sh_dir/$is_core.sh ${is_sh_bin/$is_core/sb}
 
-    [[ $jq_not_found ]] && mv -f $is_jq_ok /usr/bin/jq
+    if [[ $jq_not_found ]]; then
+        mv -f $is_jq_ok /usr/bin/jq
+        echo "file|/usr/bin/jq" >> "$is_sh_dir/.install_manifest"
+    fi
 
     chmod +x $is_core_bin $is_sh_bin /usr/bin/jq ${is_sh_bin/$is_core/sb}
 

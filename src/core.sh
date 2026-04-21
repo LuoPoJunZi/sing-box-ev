@@ -33,6 +33,13 @@ get_ip() {
     fi
 }
 
+managed_record() {
+    local item_type=$1 item_value=$2 item_extra=$3
+    if [[ -n $is_sh_dir && -d $is_sh_dir ]]; then
+        printf '%s|%s|%s\n' "$item_type" "$item_value" "$item_extra" >> "$is_sh_dir/.install_manifest"
+    fi
+}
+
 install_cloudflared() {
     if [[ ! $(type -P cloudflared) ]]; then
         msg "正在下载并安装 Cloudflare Tunnel (cloudflared)..."
@@ -42,6 +49,7 @@ install_cloudflared() {
         fi
         wget -qO /usr/local/bin/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${cf_arch}
         chmod +x /usr/local/bin/cloudflared
+        managed_record file /usr/local/bin/cloudflared
         msg "✅ Cloudflare Tunnel 安装完成."
     fi
 }
@@ -65,6 +73,8 @@ WantedBy=multi-user.target
 EOF
     systemctl daemon-reload
     systemctl enable --now cftunnel-${l_port}.service &> /dev/null
+    managed_record service "cftunnel-${l_port}.service"
+    managed_record file "/lib/systemd/system/cftunnel-${l_port}.service"
     msg "✅ CFtunnel 穿透守护服务 (关联内部端口: ${l_port}) 已创建并启动."
     msg "⚠️  $(_yellow "重要：别忘了去 Cloudflare 面板完成域名映射！")"
 }
@@ -78,11 +88,13 @@ firewall_allow() {
     if command -v ufw > /dev/null 2>&1 && ufw status | grep -q "Status: active"; then
         ufw allow ${target_port}/tcp > /dev/null 2>&1
         ufw allow ${target_port}/udp > /dev/null 2>&1
+        managed_record port "$target_port"
         msg "✅ 防火墙 (UFW): 已自动放行端口 ${target_port}"
     elif command -v firewall-cmd > /dev/null 2>&1 && systemctl is-active firewalld | grep -q "^active"; then
         firewall-cmd --add-port=${target_port}/tcp --permanent > /dev/null 2>&1
         firewall-cmd --add-port=${target_port}/udp --permanent > /dev/null 2>&1
         firewall-cmd --reload > /dev/null 2>&1
+        managed_record port "$target_port"
         msg "✅ 防火墙 (Firewalld): 已自动放行端口 ${target_port}"
     elif command -v iptables > /dev/null 2>&1; then
         iptables -I INPUT -p tcp --dport ${target_port} -j ACCEPT > /dev/null 2>&1
@@ -93,6 +105,7 @@ firewall_allow() {
         if command -v netfilter-persistent > /dev/null 2>&1; then
             netfilter-persistent save > /dev/null 2>&1
         fi
+        managed_record port "$target_port"
         msg "✅ 防火墙 (Iptables): 已尝试放行端口 ${target_port}"
     fi
 }
