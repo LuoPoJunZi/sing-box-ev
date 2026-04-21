@@ -51,7 +51,7 @@ admin_update() {
 }
 
 admin_uninstall() {
-    snapshot_ensure "pre-uninstall"
+    msg "\n提示: 卸载不会自动创建快照。如需备份，请先返回主面板，在 (9) 进阶选项 中使用快照功能。\n"
 
     if [[ $is_caddy ]]; then
         is_tmp_list=("卸载 $is_core_name" "卸载 ${is_core_name} & Caddy")
