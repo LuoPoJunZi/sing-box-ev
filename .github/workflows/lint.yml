@@ -30,7 +30,10 @@ jobs:
 
       - name: Run shellcheck
         run: |
-          find . -type f -name "*.sh" -not -path "./.git/*" -print0 | xargs -0 shellcheck -S error -e SC2148,SC2068,SC2145,SC2199
+          while IFS= read -r -d '' file; do
+            echo "shellcheck: $file"
+            shellcheck -S error -e SC2148,SC2068,SC2145,SC2199 "$file"
+          done < <(find . -type f -name "*.sh" -not -path "./.git/*" -print0)
 
   shfmt:
     name: shfmt
