@@ -120,12 +120,7 @@ sb status   # 查看运行状态
 │     ├─ 00_env.sh
 │     ├─ 10_ui.sh
 │     ├─ 20_validate.sh
-│     ├─ 25_domain.sh        # 兼容加载壳 -> domain/
-│     ├─ 30_runtime.sh       # 兼容加载壳 -> runtime/
-│     ├─ 40_node_query.sh    # 兼容加载壳 -> query/
-│     ├─ 50_node_write.sh    # 兼容加载壳 -> node/
 │     ├─ 60_sub.sh
-│     ├─ 70_admin.sh         # 兼容加载壳 -> admin/
 │     ├─ admin               # 菜单、CLI 分发、更新/卸载
 │     ├─ domain              # Reality 域名池
 │     ├─ node                # 节点新增/修改/删除
@@ -151,16 +146,16 @@ sb status   # 查看运行状态
 - `00_env.sh`：常量、协议列表、默认值
 - `10_ui.sh`：UI 输出、暂停、页脚
 - `20_validate.sh`：输入/端口校验
-- `25_domain.sh`：Reality 域名池兼容加载壳，具体逻辑在 `src/core/domain/`
-- `30_runtime.sh`：运行时兼容加载壳，诊断/快照/回滚/服务逻辑在 `src/core/runtime/`
-- `40_node_query.sh`：查询兼容加载壳，解析/展示/URL 逻辑在 `src/core/query/`
-- `50_node_write.sh`：写入兼容加载壳，新增/修改/删除逻辑在 `src/core/node/`
 - `60_sub.sh`：订阅生成
-- `70_admin.sh`：管理入口兼容加载壳，菜单和 CLI 分发在 `src/core/admin/`
+- `src/core/domain/`：Reality 域名池、权重、健康检查、自动选择
+- `src/core/runtime/`：诊断、快照、回滚、服务、Cron
+- `src/core/query/`：配置解析、节点展示、URL/二维码输出
+- `src/core/node/`：节点新增、修改、删除
+- `src/core/admin/`：菜单、CLI 分发、更新、卸载
 - `src/lib/`：安装期与运行期共享工具库
 - `src/core/utils/`：下载、BBR、日志、DNS 等运行期工具
 
-说明：`25_domain.sh`、`30_runtime.sh`、`40_node_query.sh`、`50_node_write.sh`、`70_admin.sh` 已经拆解为兼容加载壳；保留这些文件是为了保持加载顺序和旧入口稳定。`00_env.sh`、`10_ui.sh`、`20_validate.sh`、`60_sub.sh` 当前仍是独立模块。
+说明：`25_domain.sh`、`30_runtime.sh`、`40_node_query.sh`、`50_node_write.sh`、`70_admin.sh` 的兼容加载壳已经移除，现在由 `src/core.sh` 直接加载新目录模块。`00_env.sh`、`10_ui.sh`、`20_validate.sh`、`60_sub.sh` 当前仍是独立模块。
 
 ---
 
@@ -307,15 +302,11 @@ ALLOW_WRITES=1 bash scripts/regression-cli.sh
 
 ### Q1: 为什么改了命令但菜单不生效？
 
-先检查 `70_admin.sh` 是否接入分发，再检查 `core.sh` 是否有包装函数。
-
-当前分发逻辑主要在 `src/core/admin/dispatch.sh`；`70_admin.sh` 只是兼容加载壳。
+先检查 `src/core/admin/dispatch.sh` 是否接入分发，再检查 `src/core.sh` 是否有包装函数。
 
 ### Q2: 为什么 URL 显示不对但配置文件是对的？
 
-配置文件写入在 `50_node_write.sh`，URL 组装在 `40_node_query.sh`，两边都要改。
-
-当前具体实现分别位于 `src/core/node/` 和 `src/core/query/`。
+配置文件写入在 `src/core/node/`，URL 组装在 `src/core/query/`，两边都要改。
 
 ### Q3: 为什么 lint 通过但运行异常？
 

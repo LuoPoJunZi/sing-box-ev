@@ -22,11 +22,13 @@ Thanks for helping improve Sing-box-EV.
 - `src/core/00_env.sh`: shared constant arrays/defaults.
 - `src/core/10_ui.sh`: UI helpers.
 - `src/core/20_validate.sh`: validation helpers.
-- `src/core/30_runtime.sh`: runtime/service operations.
-- `src/core/40_node_query.sh`: read/query flows.
-- `src/core/50_node_write.sh`: create/change/delete flows.
 - `src/core/60_sub.sh`: subscription generation.
-- `src/core/70_admin.sh`: menu/admin dispatch.
+- `src/core/admin/`: menu/admin dispatch, update, uninstall.
+- `src/core/domain/`: Reality domain pool operations.
+- `src/core/node/`: create/change/delete flows.
+- `src/core/query/`: read/query/URL flows.
+- `src/core/runtime/`: runtime/service/doctor/snapshot operations.
+- `src/core/utils/`: runtime utility helpers.
 
 ## Quality Checks
 

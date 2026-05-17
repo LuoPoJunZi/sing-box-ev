@@ -10,23 +10,27 @@ This folder contains the refactored core modules for the Sing-box-EV script.
   - UI helpers (`msg`, `pause`, list rendering, footer).
 - `20_validate.sh`
   - Input and port validation helpers.
-- `25_domain.sh`
-  - Reality domain pool management, health checks, weighted selection.
-- `30_runtime.sh`
-  - Runtime/service operations (`manage`, `cron`, `doctor`, snapshot/rollback).
-- `40_node_query.sh`
-  - Read/query flows (`get`, `info`, `url`, list all nodes).
-- `50_node_write.sh`
-  - Write/mutate flows (`create`, `add`, `change`, `del`).
 - `60_sub.sh`
   - Subscription generation flow.
-- `70_admin.sh`
+- `admin/`
   - CLI/admin dispatch (`update`, `uninstall`, menu, `main` dispatch).
+- `domain/`
+  - Reality domain pool management, health checks, weighted selection.
+- `node/`
+  - Write/mutate flows (`create`, `add`, `change`, `del`).
+- `query/`
+  - Read/query flows (`get`, `info`, `url`, list all nodes).
+- `runtime/`
+  - Runtime/service operations (`manage`, `cron`, `doctor`, snapshot/rollback).
+- `ui/`
+  - Interactive prompt helpers.
+- `utils/`
+  - Runtime utilities such as download, BBR, log, and DNS helpers.
 
 ## Compatibility Rule
 
 - Public function names used by CLI remain in `src/core.sh` as thin wrappers.
+- `src/core.sh` loads the directory-based modules directly.
 - Modules expose prefixed internal functions (`ui_*`, `validate_*`, `query_*`, `write_*`, `admin_*`).
 - Keep behavior unchanged when moving logic between files.
-
 

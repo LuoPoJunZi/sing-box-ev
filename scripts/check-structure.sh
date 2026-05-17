@@ -59,13 +59,9 @@ check_runtime_util_targets() {
     done
 }
 
-check_source_targets src/core/25_domain.sh
-check_source_targets src/core/30_runtime.sh
-check_source_targets src/core/40_node_query.sh
-check_source_targets src/core/50_node_write.sh
+check_source_targets src/core.sh
 check_source_targets src/core/node/add.sh
 check_source_targets src/core/node/change.sh
-check_source_targets src/core/70_admin.sh
 check_lib_targets
 check_runtime_util_targets
 

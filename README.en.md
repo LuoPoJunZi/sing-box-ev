@@ -119,12 +119,7 @@ sb status
 │     ├─ 00_env.sh
 │     ├─ 10_ui.sh
 │     ├─ 20_validate.sh
-│     ├─ 25_domain.sh        # compatibility loader -> domain/
-│     ├─ 30_runtime.sh       # compatibility loader -> runtime/
-│     ├─ 40_node_query.sh    # compatibility loader -> query/
-│     ├─ 50_node_write.sh    # compatibility loader -> node/
 │     ├─ 60_sub.sh
-│     ├─ 70_admin.sh         # compatibility loader -> admin/
 │     ├─ admin               # menu, CLI dispatch, update/uninstall
 │     ├─ domain              # Reality domain pool
 │     ├─ node                # node add/change/delete flows
@@ -150,16 +145,16 @@ sb status
 - `00_env.sh`: constants and defaults
 - `10_ui.sh`: output and UI helpers
 - `20_validate.sh`: input/port validation
-- `25_domain.sh`: compatibility loader for `src/core/domain/`
-- `30_runtime.sh`: compatibility loader for `src/core/runtime/`
-- `40_node_query.sh`: compatibility loader for `src/core/query/`
-- `50_node_write.sh`: compatibility loader for `src/core/node/`
 - `60_sub.sh`: subscription generation
-- `70_admin.sh`: compatibility loader for menu and CLI dispatch in `src/core/admin/`
+- `src/core/domain/`: Reality domain pool, weights, health checks, auto-pick
+- `src/core/runtime/`: diagnostics, snapshots, rollback, service, cron
+- `src/core/query/`: config parsing, node display, URL/QR output
+- `src/core/node/`: node add/change/delete flows
+- `src/core/admin/`: menu, CLI dispatch, update, uninstall
 - `src/lib/`: shared install-time and runtime helper libraries
 - `src/core/utils/`: runtime utility helpers for download, BBR, logs, and DNS
 
-Note: `25_domain.sh`, `30_runtime.sh`, `40_node_query.sh`, `50_node_write.sh`, and `70_admin.sh` have already been split and are now compatibility loaders. They remain in place to preserve load order and stable legacy entry points. `00_env.sh`, `10_ui.sh`, `20_validate.sh`, and `60_sub.sh` are still standalone modules.
+Note: compatibility loaders `25_domain.sh`, `30_runtime.sh`, `40_node_query.sh`, `50_node_write.sh`, and `70_admin.sh` have been removed. `src/core.sh` now loads the new module directories directly. `00_env.sh`, `10_ui.sh`, `20_validate.sh`, and `60_sub.sh` are still standalone modules.
 
 ---
 
