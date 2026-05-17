@@ -111,6 +111,10 @@ sb status
 │  ├─ help.sh
 │  ├─ caddy.sh
 │  ├─ import.sh
+│  ├─ lib
+│  │  ├─ fs.sh / json.sh / net.sh
+│  │  ├─ manifest.sh / systemd.sh / firewall.sh
+│  │  └─ crypto.sh / tunnel.sh
 │  └─ core
 │     ├─ 00_env.sh
 │     ├─ 10_ui.sh
@@ -120,11 +124,17 @@ sb status
 │     ├─ 40_node_query.sh
 │     ├─ 50_node_write.sh
 │     ├─ 60_sub.sh
-│     └─ 70_admin.sh
+│     ├─ 70_admin.sh
+│     ├─ admin / domain / node / query / runtime / ui
+│     └─ utils
 ├─ scripts
+│  ├─ check-structure.sh
 │  ├─ lint.sh
+│  ├─ regression-cli.sh
 │  ├─ smoke.sh
 │  └─ smoke-reality.sh
+├─ docs
+│  └─ VPS_REGRESSION.md
 └─ .github/workflows
    ├─ lint.yml
    └─ release.yml
@@ -135,12 +145,14 @@ sb status
 - `00_env.sh`: constants and defaults
 - `10_ui.sh`: output and UI helpers
 - `20_validate.sh`: input/port validation
-- `25_domain.sh`: Reality domain pool strategy
-- `30_runtime.sh`: service and cron operations
-- `40_node_query.sh`: query/display/URL generation
-- `50_node_write.sh`: create/change/delete logic
+- `25_domain.sh`: compatibility loader for `src/core/domain/`
+- `30_runtime.sh`: compatibility loader for `src/core/runtime/`
+- `40_node_query.sh`: compatibility loader for `src/core/query/`
+- `50_node_write.sh`: compatibility loader for `src/core/node/`
 - `60_sub.sh`: subscription generation
-- `70_admin.sh`: command/menu dispatch
+- `70_admin.sh`: compatibility loader for menu and CLI dispatch in `src/core/admin/`
+- `src/lib/`: shared install-time and runtime helper libraries
+- `src/core/utils/`: runtime utility helpers for download, BBR, logs, and DNS
 
 ---
 
@@ -151,15 +163,15 @@ For `sb add reality`, the call chain is:
 1. `sing-box.sh` receives CLI args
 2. `src/init.sh` initializes runtime variables and loads core
 3. `src/core.sh` loads modules and compatibility wrappers
-4. `src/core/70_admin.sh` dispatches the command
-5. `src/core/50_node_write.sh` handles write path
-6. `src/core/40_node_query.sh` handles render/URL path
+4. `src/core/admin/dispatch.sh` dispatches the command
+5. `src/core/node/` handles write path
+6. `src/core/query/` handles render/URL path
 
 Rule of thumb:
 
-- Dispatch in `70_admin.sh`
-- Write logic in `50_node_write.sh`
-- Read/display logic in `40_node_query.sh`
+- Dispatch in `src/core/admin/dispatch.sh`
+- Write logic in `src/core/node/`
+- Read/display logic in `src/core/query/`
 - Keep concerns separated in PRs
 
 ---
@@ -171,16 +183,16 @@ Rule of thumb:
 1. `README.md`
 2. `CONTRIBUTING.md`
 3. `src/core/README.md`
-4. `src/core/70_admin.sh`
-5. Target module (`50_node_write.sh`, etc.)
+4. `src/core/admin/dispatch.sh`
+5. Target module (`src/core/node/`, `src/core/query/`, etc.)
 
 ### 7.2 First Change Pattern
 
 Example: changing Reality add behavior
 
-1. Check command routing in `70_admin.sh`
-2. Edit input/write logic in `50_node_write.sh`
-3. Sync render and URL in `40_node_query.sh`
+1. Check command routing in `src/core/admin/dispatch.sh`
+2. Edit input/write logic under `src/core/node/`
+3. Sync render and URL under `src/core/query/`
 4. Update defaults in `00_env.sh` if needed
 5. Update docs in `src/help.sh`
 
@@ -189,17 +201,31 @@ Example: changing Reality add behavior
 ```bash
 bash scripts/lint.sh
 bash scripts/smoke.sh
+bash scripts/regression-cli.sh
 # Optional on test host:
 bash scripts/smoke-reality.sh
 ```
 
 `smoke-reality.sh` creates and removes Reality test nodes; run it on test environments only.
+Full VPS regression steps are documented in [docs/VPS_REGRESSION.md](./docs/VPS_REGRESSION.md).
+
+For read-only CLI checks:
+
+```bash
+bash scripts/regression-cli.sh
+```
+
+On a disposable VPS where snapshot creation is allowed:
+
+```bash
+ALLOW_WRITES=1 bash scripts/regression-cli.sh
+```
 
 ---
 
 ## 8. Reality Domain Pool Development Notes
 
-`25_domain.sh` provides:
+`src/core/domain/` provides:
 
 1. Pool aggregation: built-in + custom domains
 2. Weighted selection: high weight has higher chance
@@ -213,7 +239,7 @@ Data files are stored under `$is_sh_dir` (usually `/etc/sing-box/sh`):
 - `domain_health.cache`
 - `domain_recent.list`
 
-If you extend selection strategy, prioritize adding it in `25_domain.sh` instead of scattering logic in query/write modules.
+If you extend selection strategy, prioritize adding it under `src/core/domain/` instead of scattering logic in query/write modules.
 
 ---
 
@@ -222,7 +248,7 @@ If you extend selection strategy, prioritize adding it in `25_domain.sh` instead
 ### 9.1 CI
 
 - Workflow: `.github/workflows/lint.yml`
-- Checks: `shellcheck` + `shfmt`
+- Checks: `shellcheck` + `shfmt` + structure checks
 
 ### 9.2 Release
 
@@ -235,6 +261,7 @@ Before release, verify:
 1. `is_sh_ver` is updated
 2. local lint/smoke checks pass
 3. README/help docs reflect behavior
+4. VPS regression checklist has been run as appropriate for the risk level
 
 ---
 
@@ -242,21 +269,22 @@ Before release, verify:
 
 ### Add a new command
 
-- Routing: `src/core/70_admin.sh`
+- Routing: `src/core/admin/dispatch.sh`
 - Help docs: `src/help.sh`
 - Optional wrapper: `src/core.sh`
 
 ### Add/change protocol fields
 
 - Defaults: `src/core/00_env.sh`
-- Write path: `src/core/50_node_write.sh`
-- Display/URL path: `src/core/40_node_query.sh`
+- Write path: `src/core/node/`
+- Display/URL path: `src/core/query/`
 - Validation: `src/core/20_validate.sh`
 
 ### Change runtime behavior
 
-- Service/cron operations: `src/core/30_runtime.sh`
-- Service templates/download logic: `src/utils.sh`
+- Service/cron operations: `src/core/runtime/`
+- Service templates: `src/lib/systemd.sh`
+- Download logic: `src/core/utils/download.sh`
 
 ---
 
@@ -264,11 +292,11 @@ Before release, verify:
 
 ### Q1: I changed a command but it does not show up.
 
-Check command dispatch in `70_admin.sh` and wrapper exposure in `core.sh`.
+Check command dispatch in `src/core/admin/dispatch.sh` and wrapper exposure in `src/core.sh`.
 
 ### Q2: Config is correct but URL output is wrong.
 
-Write logic is in `50_node_write.sh`; URL rendering is in `40_node_query.sh`. Both may require updates.
+Write logic is under `src/core/node/`; URL rendering is under `src/core/query/`. Both may require updates.
 
 ### Q3: Lint passes but runtime fails.
 

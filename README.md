@@ -112,6 +112,10 @@ sb status   # 查看运行状态
 │  ├─ help.sh
 │  ├─ caddy.sh
 │  ├─ import.sh
+│  ├─ lib
+│  │  ├─ fs.sh / json.sh / net.sh
+│  │  ├─ manifest.sh / systemd.sh / firewall.sh
+│  │  └─ crypto.sh / tunnel.sh
 │  └─ core
 │     ├─ 00_env.sh
 │     ├─ 10_ui.sh
@@ -121,11 +125,17 @@ sb status   # 查看运行状态
 │     ├─ 40_node_query.sh
 │     ├─ 50_node_write.sh
 │     ├─ 60_sub.sh
-│     └─ 70_admin.sh
+│     ├─ 70_admin.sh
+│     ├─ admin / domain / node / query / runtime / ui
+│     └─ utils
 ├─ scripts
+│  ├─ check-structure.sh
 │  ├─ lint.sh
+│  ├─ regression-cli.sh
 │  ├─ smoke.sh
 │  └─ smoke-reality.sh
+├─ docs
+│  └─ VPS_REGRESSION.md
 └─ .github/workflows
    ├─ lint.yml
    └─ release.yml
@@ -136,12 +146,14 @@ sb status   # 查看运行状态
 - `00_env.sh`：常量、协议列表、默认值
 - `10_ui.sh`：UI 输出、暂停、页脚
 - `20_validate.sh`：输入/端口校验
-- `25_domain.sh`：Reality 域名池、权重和健康探测
-- `30_runtime.sh`：服务启停、Cron 任务
-- `40_node_query.sh`：查询/展示/URL 生成
-- `50_node_write.sh`：新增/修改/删除配置
+- `25_domain.sh`：Reality 域名池兼容加载壳，具体逻辑在 `src/core/domain/`
+- `30_runtime.sh`：运行时兼容加载壳，诊断/快照/回滚/服务逻辑在 `src/core/runtime/`
+- `40_node_query.sh`：查询兼容加载壳，解析/展示/URL 逻辑在 `src/core/query/`
+- `50_node_write.sh`：写入兼容加载壳，新增/修改/删除逻辑在 `src/core/node/`
 - `60_sub.sh`：订阅生成
-- `70_admin.sh`：菜单和命令分发
+- `70_admin.sh`：管理入口兼容加载壳，菜单和 CLI 分发在 `src/core/admin/`
+- `src/lib/`：安装期与运行期共享工具库
+- `src/core/utils/`：下载、BBR、日志、DNS 等运行期工具
 
 ---
 
@@ -152,15 +164,15 @@ sb status   # 查看运行状态
 1. `sing-box.sh` 接收参数
 2. `src/init.sh` 初始化环境并加载核心
 3. `src/core.sh` 加载模块并提供兼容包装
-4. `src/core/70_admin.sh` 路由命令
-5. `src/core/50_node_write.sh` 处理写入
-6. `src/core/40_node_query.sh` 生成展示和 URL
+4. `src/core/admin/dispatch.sh` 路由命令
+5. `src/core/node/` 处理写入
+6. `src/core/query/` 生成展示和 URL
 
 简单原则：
 
-- 分发逻辑在 `70_admin.sh`
-- 写入逻辑在 `50_node_write.sh`
-- 查询展示在 `40_node_query.sh`
+- 分发逻辑在 `src/core/admin/dispatch.sh`
+- 写入逻辑在 `src/core/node/`
+- 查询展示在 `src/core/query/`
 - 不要把分发、写入、查询混在同一个改动里
 
 ---
@@ -179,16 +191,16 @@ cd sing-box-ev
 1. `README.md`
 2. `CONTRIBUTING.md`
 3. `src/core/README.md`
-4. `src/core/70_admin.sh`
-5. 目标模块（例如 `50_node_write.sh`）
+4. `src/core/admin/dispatch.sh`
+5. 目标模块（例如 `src/core/node/`）
 
 ### 7.2 第一个改动怎么做
 
 示例：你要改 `Reality` 新增参数
 
-1. 在 `70_admin.sh` 确认命令入口
-2. 在 `50_node_write.sh` 修改入参解析和写入逻辑
-3. 在 `40_node_query.sh` 确认 URL/展示同步
+1. 在 `src/core/admin/dispatch.sh` 确认命令入口
+2. 在 `src/core/node/` 修改入参解析和写入逻辑
+3. 在 `src/core/query/` 确认 URL/展示同步
 4. 若新增默认项，更新 `00_env.sh`
 5. 更新帮助文档（`help.sh`）
 
@@ -197,17 +209,31 @@ cd sing-box-ev
 ```bash
 bash scripts/lint.sh
 bash scripts/smoke.sh
+bash scripts/regression-cli.sh
 # 可选：真实环境下
 bash scripts/smoke-reality.sh
 ```
 
 `smoke-reality.sh` 会创建并删除 Reality 测试节点，请只在测试机执行。
+完整 VPS 回归清单见 [docs/VPS_REGRESSION.md](./docs/VPS_REGRESSION.md)。
+
+如果只想安全检查只读命令，运行：
+
+```bash
+bash scripts/regression-cli.sh
+```
+
+如果在一次性测试 VPS 上允许创建快照，运行：
+
+```bash
+ALLOW_WRITES=1 bash scripts/regression-cli.sh
+```
 
 ---
 
 ## 8. Reality 域名池开发说明
 
-`25_domain.sh` 提供了四类能力：
+`src/core/domain/` 提供了四类能力：
 
 1. 域名池聚合：内置 + 自定义
 2. 加权选择：高权重域名更容易被挑中
@@ -221,7 +247,7 @@ bash scripts/smoke-reality.sh
 - `domain_health.cache`
 - `domain_recent.list`
 
-如果你要扩展策略（比如按运营商/ASN），优先从 `25_domain.sh` 扩展，不要把策略散落到 `40/50` 模块。
+如果你要扩展策略（比如按运营商/ASN），优先从 `src/core/domain/` 扩展，不要把策略散落到查询或写入模块。
 
 ---
 
@@ -230,7 +256,7 @@ bash scripts/smoke-reality.sh
 ### 9.1 CI
 
 - `.github/workflows/lint.yml`
-- 执行：`shellcheck` + `shfmt`
+- 执行：`shellcheck` + `shfmt` + 结构检查
 
 ### 9.2 发布
 
@@ -243,6 +269,7 @@ bash scripts/smoke-reality.sh
 1. `is_sh_ver` 已更新
 2. 本地 lint/smoke 通过
 3. README 和 help 文档同步
+4. VPS 回归清单已按风险选择执行
 
 ---
 
@@ -250,21 +277,22 @@ bash scripts/smoke-reality.sh
 
 ### 新增命令
 
-- 分发：`70_admin.sh`
+- 分发：`src/core/admin/dispatch.sh`
 - 帮助：`help.sh`
 - 必要时增加模块函数，再在 `core.sh` 增加包装
 
 ### 新增协议字段
 
 - 默认值与列表：`00_env.sh`
-- 写入：`50_node_write.sh`
-- 展示/URL：`40_node_query.sh`
+- 写入：`src/core/node/`
+- 展示/URL：`src/core/query/`
 - 校验：`20_validate.sh`
 
 ### 服务行为修改
 
-- 服务控制：`30_runtime.sh`
-- systemd 模板和下载：`utils.sh`
+- 服务控制：`src/core/runtime/`
+- systemd 模板：`src/lib/systemd.sh`
+- 下载逻辑：`src/core/utils/download.sh`
 
 ---
 
@@ -274,9 +302,13 @@ bash scripts/smoke-reality.sh
 
 先检查 `70_admin.sh` 是否接入分发，再检查 `core.sh` 是否有包装函数。
 
+当前分发逻辑主要在 `src/core/admin/dispatch.sh`；`70_admin.sh` 只是兼容加载壳。
+
 ### Q2: 为什么 URL 显示不对但配置文件是对的？
 
 配置文件写入在 `50_node_write.sh`，URL 组装在 `40_node_query.sh`，两边都要改。
+
+当前具体实现分别位于 `src/core/node/` 和 `src/core/query/`。
 
 ### Q3: 为什么 lint 通过但运行异常？
 
