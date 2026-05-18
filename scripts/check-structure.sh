@@ -59,11 +59,29 @@ check_runtime_util_targets() {
     done
 }
 
+check_admin_dispatch_split() {
+    if ! grep -q '^admin_dispatch_command()' src/core/admin/dispatch.sh; then
+        echo "[structure] missing admin_dispatch_command in src/core/admin/dispatch.sh"
+        fail=1
+    fi
+
+    if ! grep -q '^admin_menu_run_main_action()' src/core/admin/menu_actions.sh; then
+        echo "[structure] missing admin_menu_run_main_action in src/core/admin/menu_actions.sh"
+        fail=1
+    fi
+
+    if grep -Eq '^[[:space:]]*[0-9]+\)[[:space:]]*(add|change|info|del|manage|cron_task|uninstall|gen_sub|show_all_nodes|_try_enable_bbr|log_set|get |dns_set|update |doctor|backup_list|snapshot_ensure|rollback|about)' src/core/admin/menu.sh; then
+        echo "[structure] menu.sh should route actions through menu_actions/dispatch, not call business functions directly"
+        fail=1
+    fi
+}
+
 check_source_targets src/core.sh
 check_source_targets src/core/node/add.sh
 check_source_targets src/core/node/change.sh
 check_lib_targets
 check_runtime_util_targets
+check_admin_dispatch_split
 
 if [[ $fail -ne 0 ]]; then
     echo "[structure] failed"

@@ -10,6 +10,10 @@ admin_main() {
         msg "\n已启用 DRY-RUN 模式，本次不会执行写入或服务变更.\n"
     fi
 
+    admin_dispatch_command "$@"
+}
+
+admin_dispatch_command() {
     case $1 in
         a | add | gen | no-auto-tls)
             if [[ $1 == 'gen' ]]; then is_gen=1; fi
@@ -129,6 +133,10 @@ admin_main() {
         h | help | --help)
             load help.sh
             show_help ${@:2}
+            ;;
+        about)
+            load help.sh
+            about
             ;;
         *)
             is_try_change=1

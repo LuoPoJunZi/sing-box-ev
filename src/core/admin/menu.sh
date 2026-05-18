@@ -38,51 +38,5 @@ admin_is_main_menu() {
         sleep 1
     done
 
-    case $REPLY in
-        1) add ;;
-        2) change ;;
-        3) info ;;
-        4) del ;;
-        5)
-            ask list is_do_manage "启动 停止 重启" "" "\n请选择系统服务状态:"
-            manage $REPLY &
-            msg "\n管理状态执行: $(_green $is_do_manage)\n"
-            ;;
-        6) cron_task ;;
-        7) uninstall ;;
-        8)
-            msg
-            load help.sh
-            show_help
-            ;;
-        9)
-            ask list is_do_other "节点订阅(Sub) 一键查看所有节点信息 启用BBR 查看日志 测试运行 重装脚本 设置DNS 手动更新 系统诊断(doctor) 查看快照列表 手动创建快照 回滚快照" "" "\n请选择进阶工具:"
-            case $REPLY in
-                1) gen_sub ;;
-                2) show_all_nodes ;;
-                3) _try_enable_bbr ;;
-                4) log_set ;;
-                5) get test-run ;;
-                6) get reinstall ;;
-                7) dns_set ;;
-                8)
-                    is_tmp_list=("更新$is_core_name" "更新脚本")
-                    if [[ $is_caddy ]]; then is_tmp_list+=("更新Caddy"); fi
-                    ask list is_do_update "" "\n请选择手动更新:"
-                    update $REPLY
-                    ;;
-                9) doctor ;;
-                10) backup_list ;;
-                11)
-                    unset is_snapshot_id
-                    snapshot_ensure "manual-menu"
-                    ;;
-                12) rollback ;;
-            esac
-            ;;
-        10)
-            load help.sh
-            about
-            ;;
-    esac
+    admin_menu_run_main_action "$REPLY"
 }

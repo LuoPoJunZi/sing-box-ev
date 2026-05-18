@@ -17,6 +17,14 @@ run() {
     "$@"
 }
 
+run_with_input() {
+    local input="$1"
+    shift
+    echo
+    echo "[regression-cli] >>> printf input | $*"
+    printf "%b" "$input" | "$@"
+}
+
 first_config_name() {
     find "$CONF_DIR" -maxdepth 1 -type f -name '*.json' -printf '%f\n' 2> /dev/null | sort | head -n 1
 }
@@ -27,6 +35,7 @@ echo "[regression-cli] using command: $SB_BIN"
 run "$SB_BIN" help
 run "$SB_BIN" version
 run "$SB_BIN" status
+run_with_input "0\n" "$SB_BIN" main
 run "$SB_BIN" doctor
 run "$SB_BIN" backup list
 run "$SB_BIN" domain list

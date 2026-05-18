@@ -27,6 +27,7 @@
 . "$is_sh_dir/src/core/sub/generate.sh"
 . "$is_sh_dir/src/core/admin/update.sh"
 . "$is_sh_dir/src/core/admin/uninstall.sh"
+. "$is_sh_dir/src/core/admin/menu_actions.sh"
 . "$is_sh_dir/src/core/admin/menu.sh"
 . "$is_sh_dir/src/core/admin/dispatch.sh"
 
