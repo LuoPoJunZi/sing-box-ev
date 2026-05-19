@@ -46,8 +46,10 @@ ask() {
             ;;
         list)
             is_ask_set=$2
-            if [[ ! $is_tmp_list ]]; then
+            if [[ -n ${3:-} ]]; then
                 is_tmp_list=($3)
+            elif [[ ${#is_tmp_list[@]} -eq 0 ]]; then
+                unset is_tmp_list
             fi
             is_opt_msg=$4
             if [[ ! $is_opt_msg ]]; then

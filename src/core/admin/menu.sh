@@ -4,23 +4,31 @@ admin_is_main_menu() {
     is_main_start=1
     while :; do
         clear
-        echo -e "\e[96m========================================================================\e[0m"
-        echo -e "\e[96m        Sing-box-EV 管理面板 $is_sh_ver  |  快捷启动: sb / sing-box\e[0m"
-        echo -e "\e[96m========================================================================\e[0m"
+        echo -e "\e[96m=====================================================\e[0m"
+        echo -e "\e[96m              Sing-box-EV 管理面板 $is_sh_ver\e[0m"
+        echo -e "\e[96m=====================================================\e[0m"
 
         local caddy_show=""
         if [[ $is_caddy ]]; then
             caddy_show=" | Caddy: ${is_caddy_status}"
         fi
         echo -e "  Core: ${is_core_ver} (${is_core_status})${caddy_show} | Nodes: $(list_conf_json_names '.json$' | wc -l)"
-        echo -e "\e[90m------------------------------------------------------------------------\e[0m"
+        echo -e "\e[90m-----------------------------------------------------\e[0m"
 
-        echo -e "  \e[93m节点管理:\e[0m  \e[92m(1)\e[0m 添加配置   \e[92m(2)\e[0m 更改配置   \e[92m(3)\e[0m 查看节点   \e[92m(4)\e[0m 删除配置"
-        echo -e "  \e[93m系统控制:\e[0m  \e[92m(5)\e[0m 启动/停止  \e[92m(6)\e[0m 自动维护   \e[92m(7)\e[0m 完全卸载   \e[92m(8)\e[0m 帮助文档"
-        echo -e "  \e[93m高级工具:\e[0m  \e[92m(9)\e[0m 进阶选项   \e[92m(10)\e[0m 关于脚本  \e[92m(0)\e[0m 退出"
-        echo -e "\e[90m------------------------------------------------------------------------\e[0m"
+        echo -e "  \e[93m节点管理\e[0m"
+        echo -e "    \e[92m(1)\e[0m 添加配置      \e[92m(2)\e[0m 更改配置"
+        echo -e "    \e[92m(3)\e[0m 查看节点      \e[92m(4)\e[0m 删除配置\n"
 
-        echo -ne "请输入数字 [\e[91m0-10\e[0m]: "
+        echo -e "  \e[93m系统控制\e[0m"
+        echo -e "    \e[92m(5)\e[0m 启动/停止     \e[92m(6)\e[0m 自动维护"
+        echo -e "    \e[92m(7)\e[0m 完全卸载      \e[92m(8)\e[0m 帮助文档\n"
+
+        echo -e "  \e[93m高级工具\e[0m"
+        echo -e "    \e[92m(9)\e[0m 进阶选项     \e[92m(10)\e[0m 关于脚本"
+        echo -e "    \e[92m(0)\e[0m 退出"
+        echo -e "\e[90m-----------------------------------------------------\e[0m"
+
+        echo -ne "\n请输入数字 [\e[91m0-10\e[0m]: "
         read REPLY
 
         if [[ ! $REPLY ]]; then continue; fi
