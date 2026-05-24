@@ -1,5 +1,13 @@
 # Release Notes
 
+## v1.4.1
+
+### 主要变化
+
+- GitHub Release 说明现在只展示当前版本的“主要变化”，不再显示发布流程、验证建议等维护内容。
+- Auto Release 会从 `RELEASE_NOTES.md` 当前版本下的第一段三级标题内容生成 Release 正文，方便保持页面简洁。
+- README、英文 README 和贡献说明已同步新的发布说明规则。
+
 ## v1.4.0
 
 ### 主要变化
