@@ -4,9 +4,10 @@ query_show_all_nodes() {
     is_dont_auto_exit=1
     is_show_all=1
     clear
-    echo -e "\e[96m=====================================================\e[0m"
-    echo -e "              Sing-box-EV 节点配置总览"
-    echo -e "\e[96m=====================================================\e[0m\n"
+    ui_hr
+    ui_title "              Sing-box-EV 节点配置总览"
+    ui_hr
+    echo
 
     local config_count=0
     local conf_files=()
@@ -19,9 +20,9 @@ query_show_all_nodes() {
     done
 
     if [[ $config_count -eq 0 ]]; then
-        echo -e " \e[91m目前没有找到任何节点配置，请先添加配置。\e[0m\n"
+        echo -e " $(ui_error "目前没有找到任何节点配置，请先添加配置。")\n"
     else
-        echo -e "\n \e[92m共为您列出 $config_count 个节点链接，请直接复制上方链接使用。\e[0m\n"
+        echo -e "\n $(ui_success "共为您列出 $config_count 个节点链接，请直接复制上方链接使用。")\n"
     fi
 
     is_show_all=
@@ -35,7 +36,7 @@ query_url_qr() {
     if [[ $is_url ]]; then
         if [[ $1 == 'url' ]]; then
             msg "\n------------- $is_config_name & URL 链接 -------------"
-            msg "\n\e[${is_color}m${is_url}\e[0m\n"
+            msg "\n$(ui_link "$is_url")\n"
             footer_msg
         else
             link="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${is_url}"
@@ -47,7 +48,7 @@ query_url_qr() {
                 msg "请安装 qrencode: $(_green "$cmd update -y; $cmd install qrencode -y")"
             fi
             msg "\n如果终端无法正常显示二维码, 请复制以下链接到浏览器打开生成:"
-            msg "\n\e[4;${is_color}m${link}\e[0m\n"
+            msg "\n$(ui_link "$link")\n"
             footer_msg
         fi
     else

@@ -2,7 +2,19 @@
 
 ui_msg() { echo -e "$@"; }
 
-ui_msg_ul() { echo -e "\e[4m$@\e[0m"; }
+ui_msg_ul() { ui_link "$@"; }
+
+ui_hr() { ui_brand "====================================================="; }
+
+ui_divider() { ui_muted "-----------------------------------------------------"; }
+
+ui_section() { ui_warn "$@"; }
+
+ui_option_num() { ui_key "($1)"; }
+
+ui_range() { ui_error "$@"; }
+
+ui_cancel_msg() { ui_warn "已安全取消当前操作，正在返回主面板..."; }
 
 ui_pause() {
     echo

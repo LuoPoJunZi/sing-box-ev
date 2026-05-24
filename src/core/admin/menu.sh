@@ -4,37 +4,37 @@ admin_is_main_menu() {
     is_main_start=1
     while :; do
         clear
-        echo -e "\e[96m=====================================================\e[0m"
-        echo -e "\e[96m     Sing-box-EV 管理面板 $is_sh_ver  |  快捷启动: sb\e[0m"
-        echo -e "\e[96m=====================================================\e[0m"
+        ui_hr
+        ui_title "     Sing-box-EV 管理面板 $is_sh_ver  |  快捷启动: sb"
+        ui_hr
 
         local caddy_show=""
         if [[ $is_caddy ]]; then
             caddy_show=" | Caddy: ${is_caddy_status}"
         fi
         echo -e "  Core: ${is_core_ver} (${is_core_status})${caddy_show} | Nodes: $(list_conf_json_names '.json$' | wc -l)"
-        echo -e "\e[90m-----------------------------------------------------\e[0m"
+        ui_divider
 
-        echo -e "  \e[93m节点管理\e[0m"
-        echo -e "    \e[92m(1)\e[0m 添加配置      \e[92m(2)\e[0m 更改配置"
-        echo -e "    \e[92m(3)\e[0m 查看节点      \e[92m(4)\e[0m 删除配置\n"
+        echo -e "  $(ui_section 节点管理)"
+        echo -e "    $(ui_option_num 1) 添加配置      $(ui_option_num 2) 更改配置"
+        echo -e "    $(ui_option_num 3) 查看节点      $(ui_option_num 4) 删除配置\n"
 
-        echo -e "  \e[93m系统控制\e[0m"
-        echo -e "    \e[92m(5)\e[0m 启动/停止     \e[92m(6)\e[0m 自动维护"
-        echo -e "    \e[92m(7)\e[0m 完全卸载      \e[92m(8)\e[0m 帮助文档\n"
+        echo -e "  $(ui_section 系统控制)"
+        echo -e "    $(ui_option_num 5) 启动/停止     $(ui_option_num 6) 自动维护"
+        echo -e "    $(ui_option_num 7) 完全卸载      $(ui_option_num 8) 帮助文档\n"
 
-        echo -e "  \e[93m高级工具\e[0m"
-        echo -e "    \e[92m(9)\e[0m 进阶选项     \e[92m(10)\e[0m 关于脚本"
-        echo -e "    \e[92m(0)\e[0m 退出"
-        echo -e "\e[90m-----------------------------------------------------\e[0m"
+        echo -e "  $(ui_section 高级工具)"
+        echo -e "    $(ui_option_num 9) 进阶选项     $(ui_option_num 10) 关于脚本"
+        echo -e "    $(ui_option_num 0) 退出"
+        ui_divider
 
-        echo -ne "\n请输入数字 [\e[91m0-10\e[0m]: "
+        echo -ne "\n请输入数字 [$(ui_range 0-10)]: "
         read REPLY
 
         if [[ ! $REPLY ]]; then continue; fi
         if [[ "$REPLY" == "0" ]]; then exit; fi
         if [[ "$REPLY" =~ ^([1-9]|10)$ ]]; then break; fi
-        echo -e "\e[31m输入错误, 请输入 0-10 之间的数字\e[0m"
+        ui_error "输入错误, 请输入 0-10 之间的数字"
         sleep 1
     done
 

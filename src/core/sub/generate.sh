@@ -2,9 +2,9 @@
 
 sub_gen_sub() {
     clear
-    echo -e "\e[96m=====================================================\e[0m"
-    echo -e "                 生成节点订阅链接 (Sub)"
-    echo -e "\e[96m=====================================================\e[0m"
+    ui_hr
+    ui_title "                 生成节点订阅链接 (Sub)"
+    ui_hr
     msg "🔍 正在扫描本机节点..."
 
     local all_urls=""
@@ -33,13 +33,14 @@ sub_gen_sub() {
     local sub_base64
     sub_base64=$(echo -ne "$all_urls" | base64 -w 0)
 
-    echo -e "\n------------- \e[92m方案A: 剪贴板 Base64 订阅\e[0m -------------"
+    echo -e "\n------------- $(ui_success "方案A: 剪贴板 Base64 订阅") -------------"
     echo -e "你可以直接复制下方整段乱码，在客户端选择【从剪贴板导入】:\n"
-    echo -e "\e[93m${sub_base64}\e[0m\n"
+    ui_warn "$sub_base64"
+    echo
     echo -e "--------------------------------------------------------"
 
     if command -v python3 > /dev/null 2>&1; then
-        echo -e "\n------------- \e[92m方案B: 临时 Web 订阅服务\e[0m -------------"
+        echo -e "\n------------- $(ui_success "方案B: 临时 Web 订阅服务") -------------"
         mkdir -p /tmp/sb_sub
         echo -ne "$sub_base64" > /tmp/sb_sub/sub.txt
 
@@ -52,7 +53,7 @@ sub_gen_sub() {
         local py_pid=$!
 
         msg "✅ 临时订阅 Web 服务已开启！"
-        msg "🔗 \e[4;44mhttp://${ip}:${sub_port}/sub.txt\e[0m\n"
+        msg "🔗 $(ui_link "http://${ip}:${sub_port}/sub.txt")\n"
         msg "💡 请在客户端【添加订阅】上方链接，并点击【更新订阅】。"
 
         echo -ne "\n⚠️ 导入完成后，请按 $(_green Enter 回车键) 关闭临时服务并返回主菜单..."

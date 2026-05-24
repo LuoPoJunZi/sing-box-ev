@@ -43,6 +43,7 @@ CI now runs:
 
 - `shellcheck`
 - `shfmt -d -i 4 -ci -sr`
+- `scripts/check-structure.sh`
 
 Please run equivalent checks locally before opening a PR.
 
@@ -56,4 +57,5 @@ Local helper:
 - Use clear commit messages with scope (example: `refactor(core): split query module`).
 - Include test notes in PR description (what commands were verified).
 - For behavior changes, include before/after examples from CLI output.
+- For releases, update `src/init.sh` and add the matching section in `RELEASE_NOTES.md`.
 

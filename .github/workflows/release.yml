@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'src/**'
+      - 'RELEASE_NOTES.md'
+      - '.github/workflows/release.yml'
   workflow_dispatch: # 手动触发按钮
 
 permissions:
@@ -17,6 +19,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Extract Version
         id: get_version
@@ -32,19 +36,47 @@ jobs:
           echo "成功提取到版本号: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
+            TAG_EXISTS=true
+          else
+            TAG_EXISTS=false
+          fi
+          echo "TAG_EXISTS=$TAG_EXISTS" >> $GITHUB_ENV
 
       - name: Check if Release is Needed
         id: check_release
         run: |
-          if [ "${{ env.VERSION }}" == "${{ env.LATEST_TAG }}" ]; then
+          if [ "${{ env.TAG_EXISTS }}" = "true" ]; then
             echo "版本 ${{ env.VERSION }} 已存在，无需发布新 Release。自动跳过。"
             echo "should_release=false" >> $GITHUB_ENV
           else
             echo "检测到新版本: ${{ env.VERSION }}。准备自动发布！"
             echo "should_release=true" >> $GITHUB_ENV
           fi
+
+      - name: Extract Release Notes
+        if: env.should_release == 'true'
+        run: |
+          NOTES_FILE="RELEASE_NOTES.md"
+          OUTPUT_FILE="${RUNNER_TEMP}/release-notes-${VERSION}.md"
+
+          if [ ! -f "$NOTES_FILE" ]; then
+            echo "❌ 缺少 $NOTES_FILE，无法生成 Release 描述。"
+            exit 1
+          fi
+
+          awk -v version="$VERSION" '
+            $0 == "## " version { found=1; next }
+            found && /^## / { exit }
+            found { print }
+          ' "$NOTES_FILE" > "$OUTPUT_FILE"
+
+          if [ ! -s "$OUTPUT_FILE" ]; then
+            echo "❌ $NOTES_FILE 中没有找到 $VERSION 的详细版本说明。"
+            exit 1
+          fi
+
+          echo "RELEASE_BODY=$OUTPUT_FILE" >> "$GITHUB_ENV"
 
       - name: Package Code
         if: env.should_release == 'true'
@@ -60,4 +92,4 @@ jobs:
           files: code.tar.gz
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
-          body: "🤖 自动化构建发布版本: ${{ env.VERSION }}"
+          body_path: ${{ env.RELEASE_BODY }}

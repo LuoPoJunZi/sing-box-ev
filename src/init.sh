@@ -4,26 +4,65 @@
 # ==========================================
 
 author="LuoPoJunZi"
-is_sh_ver="v1.3.2"
+is_sh_ver="v1.4.0"
 is_sh_repo="LuoPoJunZi/sing-box-ev"
 
 # --- 1. 终端 UI 颜色定义 ---
-red='\e[31m'
-yellow='\e[33m'
-gray='\e[90m'
-green='\e[92m'
-blue='\e[94m'
-magenta='\e[95m'
-cyan='\e[96m'
-none='\e[0m'
+ui_color_enabled=1
+if [[ -n ${NO_COLOR:-} || ${TERM:-} == dumb || ! -t 1 ]]; then
+    ui_color_enabled=0
+fi
 
-_red() { echo -e "${red}$@${none}"; }
-_blue() { echo -e "${blue}$@${none}"; }
-_cyan() { echo -e "${cyan}$@${none}"; }
-_green() { echo -e "${green}$@${none}"; }
-_yellow() { echo -e "${yellow}$@${none}"; }
-_magenta() { echo -e "${magenta}$@${none}"; }
-_red_bg() { echo -e "\e[41m$@${none}"; }
+if [[ $ui_color_enabled == 1 ]]; then
+    red='\e[31m'
+    yellow='\e[33m'
+    gray='\e[90m'
+    green='\e[92m'
+    blue='\e[94m'
+    magenta='\e[95m'
+    cyan='\e[96m'
+    bold='\e[1m'
+    underline='\e[4m'
+    red_bg='\e[41m'
+    none='\e[0m'
+else
+    red=''
+    yellow=''
+    gray=''
+    green=''
+    blue=''
+    magenta=''
+    cyan=''
+    bold=''
+    underline=''
+    red_bg=''
+    none=''
+fi
+
+ui_style() {
+    local style=$1
+    shift
+    echo -e "${style}$*${none}"
+}
+
+ui_brand() { ui_style "$cyan" "$@"; }
+ui_success() { ui_style "$green" "$@"; }
+ui_warn() { ui_style "$yellow" "$@"; }
+ui_error() { ui_style "$red" "$@"; }
+ui_muted() { ui_style "$gray" "$@"; }
+ui_link() { ui_style "${underline}${cyan}" "$@"; }
+ui_title() { ui_style "${bold}${cyan}" "$@"; }
+ui_key() { ui_style "$green" "$@"; }
+ui_value() { ui_style "$blue" "$@"; }
+ui_danger_badge() { ui_style "$red_bg" "$@"; }
+
+_red() { ui_error "$@"; }
+_blue() { ui_value "$@"; }
+_cyan() { ui_brand "$@"; }
+_green() { ui_success "$@"; }
+_yellow() { ui_warn "$@"; }
+_magenta() { ui_style "$magenta" "$@"; }
+_red_bg() { ui_danger_badge "$@"; }
 
 _rm() { rm -rf "$@"; }
 _cp() { cp -rf "$@"; }

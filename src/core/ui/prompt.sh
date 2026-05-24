@@ -6,32 +6,32 @@ ask() {
             is_tmp_list=(${ss_method_list[@]})
             is_default_arg=$is_random_ss_method
             is_opt_msg="\n请选择加密方式:"
-            is_opt_input_msg="➡️ 请选择 \e[92m(输入 0 返回主面板，默认 $is_default_arg)\e[0m: "
+            is_opt_input_msg="➡️ 请选择 $(ui_key "(输入 0 返回主面板，默认 $is_default_arg)"): "
             is_ask_set=ss_method
             ;;
         set_protocol)
-            echo -e "\e[96m=====================================================\e[0m"
-            echo -e "                 请选择要添加的协议"
-            echo -e "\e[96m=====================================================\e[0m"
-            echo -e "  \e[93m基础协议\e[0m"
-            echo -e "  \e[92m(1)\e[0m TUIC        \e[92m(2)\e[0m Trojan       \e[92m(3)\e[0m Hysteria2"
-            echo -e "  \e[92m(4)\e[0m VMess-WS    \e[92m(5)\e[0m VMess-TCP    \e[92m(6)\e[0m VMess-HTTP"
-            echo -e "  \e[92m(7)\e[0m VMess-QUIC  \e[92m(8)\e[0m Shadowsocks"
+            ui_hr
+            ui_title "                 请选择要添加的协议"
+            ui_hr
+            echo -e "  $(ui_section 基础协议)"
+            echo -e "  $(ui_option_num 1) TUIC        $(ui_option_num 2) Trojan       $(ui_option_num 3) Hysteria2"
+            echo -e "  $(ui_option_num 4) VMess-WS    $(ui_option_num 5) VMess-TCP    $(ui_option_num 6) VMess-HTTP"
+            echo -e "  $(ui_option_num 7) VMess-QUIC  $(ui_option_num 8) Shadowsocks"
             echo
-            echo -e "  \e[93mTLS 隧道\e[0m"
-            echo -e "  \e[92m(9)\e[0m  VMess-H2   \e[92m(10)\e[0m VMess-WS    \e[92m(11)\e[0m VLESS-H2"
-            echo -e "  \e[92m(12)\e[0m VLESS-WS   \e[92m(13)\e[0m Trojan-H2   \e[92m(14)\e[0m Trojan-WS"
-            echo -e "  \e[92m(15)\e[0m VMess-HU   \e[92m(16)\e[0m VLESS-HU    \e[92m(17)\e[0m Trojan-HU\n"
-            echo -e "  \e[93m强力抗封锁\e[0m"
-            echo -e "  \e[92m(18)\e[0m VLESS-REALITY     \e[92m(19)\e[0m VLESS-HTTP2-REALITY"
-            echo -e "  \e[92m(20)\e[0m AnyTLS\n"
-            echo -e "  \e[93m隧道穿透\e[0m"
-            echo -e "  \e[92m(21)\e[0m CFtunnel          \e[92m(22)\e[0m Socks\n"
-            echo -e "  \e[93m取消操作\e[0m"
-            echo -e "  \e[92m(0)\e[0m 返回主面板"
-            echo -e "\e[90m-----------------------------------------------------\e[0m"
+            echo -e "  $(ui_section "TLS 隧道")"
+            echo -e "  $(ui_option_num 9)  VMess-H2   $(ui_option_num 10) VMess-WS    $(ui_option_num 11) VLESS-H2"
+            echo -e "  $(ui_option_num 12) VLESS-WS   $(ui_option_num 13) Trojan-H2   $(ui_option_num 14) Trojan-WS"
+            echo -e "  $(ui_option_num 15) VMess-HU   $(ui_option_num 16) VLESS-HU    $(ui_option_num 17) Trojan-HU\n"
+            echo -e "  $(ui_section 强力抗封锁)"
+            echo -e "  $(ui_option_num 18) VLESS-REALITY     $(ui_option_num 19) VLESS-HTTP2-REALITY"
+            echo -e "  $(ui_option_num 20) AnyTLS\n"
+            echo -e "  $(ui_section 隧道穿透)"
+            echo -e "  $(ui_option_num 21) CFtunnel          $(ui_option_num 22) Socks\n"
+            echo -e "  $(ui_section 取消操作)"
+            echo -e "  $(ui_option_num 0) 返回主面板"
+            ui_divider
             is_ask_set=is_new_protocol
-            is_opt_input_msg="➡️ 请选择协议序号 [\e[91m0-22\e[0m]: "
+            is_opt_input_msg="➡️ 请选择协议序号 [$(ui_range 0-22)]: "
             ;;
         set_change_list)
             is_tmp_list=()
@@ -40,11 +40,11 @@ ask() {
             done
             is_opt_msg="\n请选择更改:"
             is_ask_set=is_change_str
-            is_opt_input_msg="➡️ 请输入对应的数字 \e[92m(输入 0 返回主面板)\e[0m: "
+            is_opt_input_msg="➡️ 请输入对应的数字 $(ui_key "(输入 0 返回主面板)"): "
             ;;
         string)
             is_ask_set=$2
-            is_opt_input_msg="${3/:/} \e[92m(输入 0 返回主面板)\e[0m: "
+            is_opt_input_msg="${3/:/} $(ui_key "(输入 0 返回主面板)"): "
             ;;
         list)
             is_ask_set=$2
@@ -59,16 +59,16 @@ ask() {
             fi
             is_opt_input_msg=$5
             if [[ ! $is_opt_input_msg ]]; then
-                is_opt_input_msg="➡️ 请输入对应的数字 \e[92m(输入 0 返回主面板)\e[0m: "
+                is_opt_input_msg="➡️ 请输入对应的数字 $(ui_key "(输入 0 返回主面板)"): "
             else
-                is_opt_input_msg="${is_opt_input_msg/:/} \e[92m(输入 0 返回主面板)\e[0m: "
+                is_opt_input_msg="${is_opt_input_msg/:/} $(ui_key "(输入 0 返回主面板)"): "
             fi
             ;;
         get_config_file)
             is_tmp_list=("${is_all_json[@]}")
             is_opt_msg="\n请选择配置:"
             is_ask_set=is_config_file
-            is_opt_input_msg="➡️ 请输入对应的数字 \e[92m(输入 0 返回主面板)\e[0m: "
+            is_opt_input_msg="➡️ 请输入对应的数字 $(ui_key "(输入 0 返回主面板)"): "
             ;;
     esac
 
@@ -84,7 +84,8 @@ ask() {
         read REPLY
 
         if [[ "$REPLY" == "0" ]]; then
-            echo -e "\n\e[33m已安全取消当前操作，正在返回主面板...\e[0m"
+            echo
+            ui_cancel_msg
             sleep 0.5
             is_main_menu
             exit 0

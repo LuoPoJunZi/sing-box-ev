@@ -36,10 +36,11 @@ admin_menu_ask_advanced_action() {
     msg "(12) 回滚快照"
 
     while :; do
-        echo -ne "\n➡️ 请输入对应的数字 \e[92m(输入 0 返回主面板)\e[0m: "
+        echo -ne "\n➡️ 请输入对应的数字 $(ui_key "(输入 0 返回主面板)"): "
         read REPLY
         if [[ "$REPLY" == "0" ]]; then
-            echo -e "\n\e[33m已安全取消当前操作，正在返回主面板...\e[0m"
+            echo
+            ui_cancel_msg
             sleep 0.5
             is_main_menu
             exit 0

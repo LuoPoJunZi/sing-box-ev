@@ -2,7 +2,7 @@
 
 query_info() {
     if [[ ! $is_protocol ]]; then get info $1; fi
-    is_color=44
+    is_value_style=$blue
 
     if [[ -z "$custom_remark" ]]; then
         local tmp_name="${is_config_name%.json}"
@@ -14,7 +14,7 @@ query_info() {
     fi
 
     if [[ $is_config_name =~ "CFtunnel" ]]; then
-        is_color=45
+        is_value_style=$magenta
         is_can_change=(0 2 5)
         is_info_show=(0 1 2 3 4 6 7 8)
         is_info_str=(vless "$host" "443" $uuid ws "$host" "$path" tls)
@@ -27,7 +27,7 @@ query_info() {
     case $net in
         ws | tcp | h2 | quic | http*)
             if [[ $host ]]; then
-                is_color=45
+                is_value_style=$magenta
                 is_can_change=(0 1 2 3 5)
                 is_info_show=(0 1 2 3 4 6 7 8)
                 if [[ $is_protocol == 'vmess' ]]; then
@@ -92,7 +92,7 @@ query_info() {
             is_info_str=($is_protocol $is_addr $port $uuid $password tls h3 true bbr)
             ;;
         reality)
-            is_color=41
+            is_value_style=$magenta
             is_can_change=(0 1 5 9 10)
             is_info_show=(0 1 2 3 15 4 8 16 17 18)
             is_flow=xtls-rprx-vision
@@ -119,7 +119,7 @@ query_info() {
     esac
 
     if [[ $is_show_all ]]; then
-        echo -e "\e[4;${is_color}m${is_url}\e[0m"
+        ui_link "$is_url"
         return
     fi
 
@@ -129,12 +129,12 @@ query_info() {
     for ((i = 0; i < ${#is_info_show[@]}; i++)); do
         a=${info_list[${is_info_show[$i]}]}
         if [[ ${#a} -eq 11 || ${#a} -ge 13 ]]; then tt='\t'; else tt='\t\t'; fi
-        msg "$a $tt= \e[${is_color}m${is_info_str[$i]}\e[0m"
+        msg "$a $tt= $(ui_style "$is_value_style" "${is_info_str[$i]}")"
     done
     if [[ $is_new_install ]]; then warn "首次安装请查看项目文档: $(msg_ul https://github.com/${is_sh_repo})"; fi
     if [[ $is_url ]]; then
         msg "------------- ${info_list[12]} -------------"
-        msg "\e[4;${is_color}m${is_url}\e[0m"
+        msg "$(ui_link "$is_url")"
         if [[ $is_insecure ]]; then warn "某些客户端导入URL需手动将跳过证书验证设置为 true"; fi
     fi
     if [[ $is_no_auto_tls ]]; then

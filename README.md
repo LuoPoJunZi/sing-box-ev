@@ -308,14 +308,16 @@ ALLOW_WRITES=1 bash scripts/regression-cli.sh
 
 - `.github/workflows/release.yml`
 - 从 `src/init.sh` 的 `is_sh_ver` 提取版本
+- 从 `RELEASE_NOTES.md` 中提取当前版本说明
 - 若 tag 不存在则自动打包发布
 
 发布前请确认：
 
 1. `is_sh_ver` 已更新
-2. 本地 lint/smoke 通过
-3. README 和 help 文档同步
-4. VPS 回归清单已按风险选择执行
+2. `RELEASE_NOTES.md` 已添加对应版本说明
+3. 本地 lint/smoke 通过
+4. README 和 help 文档同步
+5. VPS 回归清单已按风险选择执行
 
 ---
 
