@@ -4,7 +4,7 @@
 # ==========================================
 
 author="LuoPoJunZi"
-is_sh_ver="v1.4.1"
+is_sh_ver="v1.4.2"
 is_sh_repo="LuoPoJunZi/sing-box-ev"
 
 # --- 1. 终端 UI 颜色定义 ---
@@ -16,11 +16,11 @@ fi
 if [[ $ui_color_enabled == 1 ]]; then
     red='\e[31m'
     yellow='\e[33m'
-    gray='\e[90m'
-    green='\e[92m'
-    blue='\e[94m'
-    magenta='\e[95m'
-    cyan='\e[96m'
+    gray='\e[37m'
+    green='\e[32m'
+    blue='\e[36m'
+    magenta='\e[35m'
+    cyan='\e[36m'
     bold='\e[1m'
     underline='\e[4m'
     red_bg='\e[41m'
