@@ -40,16 +40,20 @@ Expected:
 
 ```bash
 sb doctor
+NO_COLOR=1 sb doctor
 sb backup list
 sb domain list
 sb domain pick
 sb all
+sb dry-run uninstall
 ```
 
 Expected:
 
 - Commands return cleanly.
-- `doctor` gives actionable output.
+- `doctor` gives actionable output for system, dependencies, services, ports, config, network, disk, snapshots, and install manifest.
+- `NO_COLOR=1 sb doctor` remains readable for log copying and CI-style output.
+- `sb dry-run uninstall` prints the uninstall plan without asking for confirmation or deleting anything.
 - Empty backup/node states are handled without stack traces or shell errors.
 
 ## 4. Node Lifecycle Checks
@@ -117,12 +121,14 @@ Pick an existing config name from `sb all` or `/etc/sing-box/conf`:
 sb dry-run change <config-name> port auto
 sb dry-run change <config-name> key auto
 sb dry-run change <config-name> sni auto
+sb dry-run uninstall
 ```
 
 Expected:
 
 - Output clearly says `DRY-RUN`.
 - Config files and services are not changed.
+- Uninstall preview lists planned directories, commands, services, tunnel artifacts, firewall ports, and install manifest status without prompting.
 
 ## 8. Complete Uninstall Checks
 

@@ -85,8 +85,9 @@ sb status
 | `sb all` | Print all node URLs |
 | `sb log` | Tail runtime logs |
 | `sb update` | Update core/script |
-| `sb doctor` | Run system diagnostics (service/config/network) |
+| `sb doctor` | Run system diagnostics (environment/dependencies/services/ports/config/network) |
 | `sb dry-run <command> [args...]` | Preview command without applying writes/restarts |
+| `sb dry-run uninstall` | Preview the complete uninstall scope without deleting anything |
 | `sb backup list` | List configuration snapshots |
 | `sb backup create [reason]` | Create a snapshot manually |
 | `sb rollback [snapshot_id]` | Roll back to a snapshot |
@@ -263,6 +264,8 @@ For read-only CLI checks:
 bash scripts/regression-cli.sh
 ```
 
+`regression-cli.sh` also runs `NO_COLOR=1 sb doctor` to ensure diagnostics remain readable in plain log output.
+
 On a disposable VPS where snapshot creation is allowed:
 
 ```bash
@@ -313,6 +316,12 @@ Before release, verify:
 4. local lint/smoke checks pass
 5. README/help docs reflect behavior
 6. VPS regression checklist has been run as appropriate for the risk level
+
+To verify that a new release tag does not already exist locally before publishing:
+
+```bash
+RELEASE_CHECK_STRICT_TAG=1 bash scripts/check-release.sh
+```
 
 ---
 

@@ -86,8 +86,9 @@ sb status   # 查看运行状态
 | `sb all` | 列出所有节点链接 |
 | `sb log` | 查看日志 |
 | `sb update` | 更新核心/脚本 |
-| `sb doctor` | 系统诊断（服务/配置/网络） |
+| `sb doctor` | 系统诊断（环境/依赖/服务/端口/配置/网络） |
 | `sb dry-run <command> [args...]` | 预演命令，不执行写入/重启 |
+| `sb dry-run uninstall` | 预览完全卸载范围，不执行删除 |
 | `sb backup list` | 查看配置快照 |
 | `sb backup create [reason]` | 手动创建快照 |
 | `sb rollback [snapshot_id]` | 回滚到快照 |
@@ -271,6 +272,8 @@ bash scripts/smoke-reality.sh
 bash scripts/regression-cli.sh
 ```
 
+`regression-cli.sh` 会同时执行 `NO_COLOR=1 sb doctor`，用于确认诊断输出在无色日志模式下仍然清晰可读。
+
 如果在一次性测试 VPS 上允许创建快照，运行：
 
 ```bash
@@ -321,6 +324,12 @@ ALLOW_WRITES=1 bash scripts/regression-cli.sh
 4. 本地 lint/smoke 通过
 5. README 和 help 文档同步
 6. VPS 回归清单已按风险选择执行
+
+如果要在发版前确认本地没有同名 tag，可执行：
+
+```bash
+RELEASE_CHECK_STRICT_TAG=1 bash scripts/check-release.sh
+```
 
 ---
 

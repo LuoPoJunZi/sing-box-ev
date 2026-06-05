@@ -47,6 +47,7 @@ CI now runs:
 - `scripts/check-release.sh`
 
 Please run equivalent checks locally before opening a PR.
+When preparing a public release, run `RELEASE_CHECK_STRICT_TAG=1 bash scripts/check-release.sh` if you want the check to fail when the tag already exists locally.
 
 Local helper:
 

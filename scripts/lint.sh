@@ -21,7 +21,7 @@ while IFS= read -r -d '' file; do
 done < <(find . -type f -name "*.sh" -not -path "./.git/*" -print0)
 
 echo "[lint] shfmt"
-shfmt -d -i 4 -ci -sr install.sh sing-box.sh src
+shfmt -d -i 4 -ci -sr install.sh sing-box.sh src scripts
 
 echo "[lint] structure"
 scripts/check-structure.sh

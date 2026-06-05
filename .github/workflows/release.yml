@@ -54,6 +54,11 @@ jobs:
             echo "should_release=true" >> $GITHUB_ENV
           fi
 
+      - name: Check Release Metadata
+        if: env.should_release == 'true'
+        run: |
+          RELEASE_CHECK_STRICT_TAG=1 bash scripts/check-release.sh
+
       - name: Extract Release Notes
         if: env.should_release == 'true'
         run: |

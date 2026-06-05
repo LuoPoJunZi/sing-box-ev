@@ -76,16 +76,48 @@ admin_uninstall_cleanup_manifest() {
     done < "$manifest"
 }
 
+admin_uninstall_preview() {
+    local manifest ports=() manifest_count=0
+    manifest="$(admin_uninstall_manifest_path)"
+
+    msg "\nDRY-RUN: 将完整卸载 $is_core_name，但不会实际删除文件、停止服务或修改防火墙。"
+    msg "预计清理范围:"
+    msg "- 安装目录: $is_core_dir"
+    msg "- 日志目录: $is_log_dir"
+    msg "- 命令入口: $is_sh_bin / ${is_sh_bin/$is_core/sb}"
+    msg "- systemd 服务: $is_core.service"
+    if [[ $is_caddy || -d $is_caddy_dir || -f $is_caddy_bin ]]; then
+        msg "- Caddy: $is_caddy_dir / $is_caddy_bin / caddy.service"
+    fi
+    msg "- Cloudflare Tunnel: cloudflared 与 cftunnel-*.service"
+
+    mapfile -t ports < <(admin_uninstall_collect_ports | sort -u)
+    if [[ ${#ports[@]} -gt 0 ]]; then
+        msg "- 防火墙端口: ${ports[*]}"
+    else
+        msg "- 防火墙端口: 未从配置或安装清单中发现"
+    fi
+
+    if [[ -f $manifest ]]; then
+        manifest_count=$(wc -l < "$manifest" 2> /dev/null)
+        msg "- 安装清单: $manifest ($manifest_count 条记录)"
+    else
+        msg "- 安装清单: 未找到 $manifest，将按兼容规则预览"
+    fi
+    msg
+}
+
 admin_uninstall() {
     ui_warn_msg "卸载不会自动创建快照。如需备份，请先返回主面板，在 (9) 进阶选项 中使用快照功能。"
     msg
     msg "$(ui_danger_text "完全卸载") 将清理本脚本创建的配置、节点、日志、命令、服务、计划任务、CFtunnel、Caddy 与防火墙放行记录。"
-    ask string y "是否完全卸载 ${is_core_name}? [y]: "
 
     if [[ $is_dry_run ]]; then
-        msg "\nDRY-RUN: 将完整卸载 $is_core_name，并清理脚本创建的目录、命令、服务、计划任务、防火墙端口与 CFtunnel 残留（未实际执行）\n"
+        admin_uninstall_preview
         return
     fi
+
+    ask string y "是否完全卸载 ${is_core_name}? [y]: "
 
     manage stop &> /dev/null
     manage disable &> /dev/null

@@ -25,11 +25,22 @@ run_with_input() {
     printf "%b" "$input" | "$@"
 }
 
+run_no_color() {
+    echo
+    echo "[regression-cli] >>> NO_COLOR=1 $*"
+    NO_COLOR=1 "$@"
+}
+
 first_config_name() {
     find "$CONF_DIR" -maxdepth 1 -type f -name '*.json' -printf '%f\n' 2> /dev/null | sort | head -n 1
 }
 
 echo "[regression-cli] using command: $SB_BIN"
+echo "[regression-cli] host: $(uname -a 2> /dev/null || true)"
+if [[ -f /etc/os-release ]]; then
+    os_name="$(grep -E '^PRETTY_NAME=' /etc/os-release 2> /dev/null | cut -d= -f2- | tr -d '"')"
+    echo "[regression-cli] os: ${os_name:-unknown}"
+fi
 
 # Read-only commands. These should be safe on production hosts.
 run "$SB_BIN" help
@@ -37,10 +48,12 @@ run "$SB_BIN" version
 run "$SB_BIN" status
 run_with_input "0\n" "$SB_BIN" main
 run "$SB_BIN" doctor
+run_no_color "$SB_BIN" doctor
 run "$SB_BIN" backup list
 run "$SB_BIN" domain list
 run "$SB_BIN" domain pick
 run "$SB_BIN" all
+run "$SB_BIN" dry-run uninstall
 
 config_name="$(first_config_name || true)"
 if [[ -n $config_name ]]; then

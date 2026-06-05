@@ -48,8 +48,11 @@ if grep -qE '发布流程|验证建议' <<< "$notes_body"; then
 fi
 
 if git rev-parse -q --verify "refs/tags/$version" > /dev/null; then
-    echo "[release] local tag already exists: $version"
-    exit 1
+    if [[ ${RELEASE_CHECK_STRICT_TAG:-0} == "1" ]]; then
+        echo "[release] local tag already exists: $version"
+        exit 1
+    fi
+    echo "[release] note: local tag already exists: $version"
 fi
 
 echo "[release] ok: $version"
