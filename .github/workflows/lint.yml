@@ -8,12 +8,14 @@ on:
       - "*.sh"
       - "src/**/*.sh"
       - "scripts/check-structure.sh"
+      - "scripts/check-release.sh"
       - ".github/workflows/lint.yml"
   pull_request:
     paths:
       - "*.sh"
       - "src/**/*.sh"
       - "scripts/check-structure.sh"
+      - "scripts/check-release.sh"
       - ".github/workflows/lint.yml"
   workflow_dispatch:
 
@@ -63,3 +65,14 @@ jobs:
       - name: Check module structure
         run: |
           bash scripts/check-structure.sh
+
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check release metadata
+        run: |
+          bash scripts/check-release.sh

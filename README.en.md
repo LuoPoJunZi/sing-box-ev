@@ -111,6 +111,7 @@ sb status
 │  └─ VPS_REGRESSION.md               # real VPS regression checklist
 ├─ scripts
 │  ├─ check-structure.sh              # validates sourced module targets
+│  ├─ check-release.sh                # validates version and release notes
 │  ├─ lint.sh                         # local lint wrapper
 │  ├─ regression-cli.sh               # repeatable CLI regression checks
 │  ├─ smoke.sh                        # basic smoke checks
@@ -246,6 +247,7 @@ Example: changing Reality add behavior
 
 ```bash
 bash scripts/lint.sh
+bash scripts/check-release.sh
 bash scripts/smoke.sh
 bash scripts/regression-cli.sh
 # Optional on test host:
@@ -307,9 +309,10 @@ Before release, verify:
 
 1. `is_sh_ver` is updated
 2. `RELEASE_NOTES.md` contains `### 主要变化` for the target version
-3. local lint/smoke checks pass
-4. README/help docs reflect behavior
-5. VPS regression checklist has been run as appropriate for the risk level
+3. `bash scripts/check-release.sh` passes
+4. local lint/smoke checks pass
+5. README/help docs reflect behavior
+6. VPS regression checklist has been run as appropriate for the risk level
 
 ---
 

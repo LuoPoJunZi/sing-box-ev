@@ -51,6 +51,8 @@ ui_title() { ui_style "${bold}${cyan}" "$@"; }
 ui_key() { ui_style "$green" "$@"; }
 ui_value() { ui_style "$blue" "$@"; }
 ui_danger_badge() { ui_style "$red_bg" "$@"; }
+ui_warn_badge() { ui_warn "[WARN]"; }
+ui_err_badge() { ui_error "[ERR]"; }
 
 _red() { ui_error "$@"; }
 _blue() { ui_value "$@"; }
@@ -60,8 +62,8 @@ _yellow() { ui_warn "$@"; }
 _magenta() { ui_style "$magenta" "$@"; }
 _red_bg() { ui_danger_badge "$@"; }
 
-is_err=$(_red_bg 错误!)
-is_warn=$(_red_bg 警告!)
+is_err=$(ui_err_badge)
+is_warn=$(ui_warn_badge)
 
 err() {
     echo -e "\n$is_err $@\n" && exit 1

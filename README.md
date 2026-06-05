@@ -112,6 +112,7 @@ sb status   # 查看运行状态
 │  └─ VPS_REGRESSION.md               # 真实 VPS 回归测试清单
 ├─ scripts
 │  ├─ check-structure.sh              # 检查模块加载目标是否存在
+│  ├─ check-release.sh                # 检查版本号与发布说明
 │  ├─ lint.sh                         # 本地 lint 汇总入口
 │  ├─ regression-cli.sh               # 可重复执行的 CLI 回归检查
 │  ├─ smoke.sh                        # 基础 smoke 检查
@@ -254,6 +255,7 @@ cd sing-box-ev
 
 ```bash
 bash scripts/lint.sh
+bash scripts/check-release.sh
 bash scripts/smoke.sh
 bash scripts/regression-cli.sh
 # 可选：真实环境下
@@ -315,9 +317,10 @@ ALLOW_WRITES=1 bash scripts/regression-cli.sh
 
 1. `is_sh_ver` 已更新
 2. `RELEASE_NOTES.md` 已添加对应版本的 `### 主要变化`
-3. 本地 lint/smoke 通过
-4. README 和 help 文档同步
-5. VPS 回归清单已按风险选择执行
+3. `bash scripts/check-release.sh` 通过
+4. 本地 lint/smoke 通过
+5. README 和 help 文档同步
+6. VPS 回归清单已按风险选择执行
 
 ---
 

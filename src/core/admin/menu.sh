@@ -21,7 +21,7 @@ admin_is_main_menu() {
 
         echo -e "  $(ui_section 系统控制)"
         echo -e "    $(ui_option_num 5) 启动/停止     $(ui_option_num 6) 自动维护"
-        echo -e "    $(ui_option_num 7) 完全卸载      $(ui_option_num 8) 帮助文档\n"
+        echo -e "    $(ui_error "(7) 完全卸载")      $(ui_option_num 8) 帮助文档\n"
 
         echo -e "  $(ui_section 高级工具)"
         echo -e "    $(ui_option_num 9) 进阶选项     $(ui_option_num 10) 关于脚本"

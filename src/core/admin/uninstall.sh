@@ -77,8 +77,9 @@ admin_uninstall_cleanup_manifest() {
 }
 
 admin_uninstall() {
-    msg "\n提示: 卸载不会自动创建快照。如需备份，请先返回主面板，在 (9) 进阶选项 中使用快照功能。\n"
-    msg "完全卸载将清理本脚本创建的配置、节点、日志、命令、服务、计划任务、CFtunnel、Caddy 与防火墙放行记录。"
+    ui_warn_msg "卸载不会自动创建快照。如需备份，请先返回主面板，在 (9) 进阶选项 中使用快照功能。"
+    msg
+    msg "$(ui_danger_text "完全卸载") 将清理本脚本创建的配置、节点、日志、命令、服务、计划任务、CFtunnel、Caddy 与防火墙放行记录。"
     ask string y "是否完全卸载 ${is_core_name}? [y]: "
 
     if [[ $is_dry_run ]]; then
@@ -110,6 +111,6 @@ admin_uninstall() {
     systemctl reset-failed > /dev/null 2>&1 || true
     if [[ $is_install_sh ]]; then return; fi
 
-    _green "\n卸载完成!"
+    ui_success_msg "卸载完成!"
     msg "脚本哪里需要完善? 请反馈: $(msg_ul https://github.com/${is_sh_repo}/issues)\n"
 }

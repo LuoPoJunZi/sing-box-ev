@@ -26,6 +26,9 @@ shfmt -d -i 4 -ci -sr install.sh sing-box.sh src
 echo "[lint] structure"
 scripts/check-structure.sh
 
+echo "[lint] release"
+bash scripts/check-release.sh
+
 echo "[lint] regression script syntax"
 bash -n scripts/regression-cli.sh
 

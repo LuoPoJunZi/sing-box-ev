@@ -4,7 +4,7 @@
 # ==========================================
 
 author="LuoPoJunZi"
-is_sh_ver="v1.4.2"
+is_sh_ver="v1.4.3"
 is_sh_repo="LuoPoJunZi/sing-box-ev"
 
 # --- 1. 终端 UI 颜色定义 ---
@@ -55,6 +55,10 @@ ui_title() { ui_style "${bold}${cyan}" "$@"; }
 ui_key() { ui_style "$green" "$@"; }
 ui_value() { ui_style "$blue" "$@"; }
 ui_danger_badge() { ui_style "$red_bg" "$@"; }
+ui_ok_badge() { ui_success "[OK]"; }
+ui_stop_badge() { ui_error "[STOP]"; }
+ui_warn_badge() { ui_warn "[WARN]"; }
+ui_err_badge() { ui_error "[ERR]"; }
 
 _red() { ui_error "$@"; }
 _blue() { ui_value "$@"; }
@@ -69,8 +73,8 @@ _cp() { cp -rf "$@"; }
 _sed() { sed -i "$@"; }
 _mkdir() { mkdir -p "$@"; }
 
-is_err=$(_red_bg "错误!")
-is_warn=$(_red_bg "警告!")
+is_err=$(ui_err_badge)
+is_warn=$(ui_warn_badge)
 
 err() {
     echo -e "\n$is_err $@\n"
@@ -134,9 +138,9 @@ if [[ ! -f $is_tls_cer || ! -f $is_tls_key ]]; then
 fi
 
 if systemctl is-active --quiet "$is_core" 2> /dev/null || pgrep -f "$is_core_bin" > /dev/null; then
-    is_core_status=$(_green "running")
+    is_core_status="$(ui_ok_badge) $(_green "running")"
 else
-    is_core_status=$(_red_bg "stopped")
+    is_core_status="$(ui_stop_badge) $(_red "stopped")"
     is_core_stop=1
 fi
 
@@ -154,9 +158,9 @@ if [[ -f $is_caddy_bin && -d $is_caddy_dir && $is_caddy_service ]]; then
     [[ $is_tmp_https_port ]] && is_https_port=$is_tmp_https_port
 
     if systemctl is-active --quiet caddy 2> /dev/null || pgrep -f "$is_caddy_bin" > /dev/null; then
-        is_caddy_status=$(_green "running")
+        is_caddy_status="$(ui_ok_badge) $(_green "running")"
     else
-        is_caddy_status=$(_red_bg "stopped")
+        is_caddy_status="$(ui_stop_badge) $(_red "stopped")"
         is_caddy_stop=1
     fi
 fi

@@ -44,6 +44,7 @@ CI now runs:
 - `shellcheck`
 - `shfmt -d -i 4 -ci -sr`
 - `scripts/check-structure.sh`
+- `scripts/check-release.sh`
 
 Please run equivalent checks locally before opening a PR.
 

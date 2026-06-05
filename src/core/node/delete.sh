@@ -15,7 +15,7 @@ write_del() {
             return
         fi
         if [[ $is_main_start && ! $is_no_del_msg ]]; then
-            msg "\n是否删除配置文件?: $is_config_file"
+            msg "\n$(ui_danger_text "即将删除配置文件"): $is_config_file"
             pause
         fi
         rm -rf -- "$is_conf_dir/$is_config_file"
@@ -33,7 +33,8 @@ write_del() {
             manage restart &
         fi
         if [[ ! $is_no_del_msg ]]; then
-            _green "\n已删除: $is_config_file\n"
+            ui_success_msg "已删除: $is_config_file"
+            msg
         fi
 
         if [[ $is_caddy ]]; then
