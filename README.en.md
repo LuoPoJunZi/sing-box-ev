@@ -85,7 +85,7 @@ sb status
 | `sb all` | Print all node URLs |
 | `sb log` | Tail runtime logs |
 | `sb update` | Update core/script |
-| `sb doctor` | Run system diagnostics (environment/dependencies/services/ports/config/network) |
+| `sb doctor` | Run system diagnostics (environment/colors/dependencies/services/ports/config/network) |
 | `sb dry-run <command> [args...]` | Preview command without applying writes/restarts |
 | `sb dry-run uninstall` | Preview the complete uninstall scope without deleting anything |
 | `sb backup list` | List configuration snapshots |
@@ -264,7 +264,7 @@ For read-only CLI checks:
 bash scripts/regression-cli.sh
 ```
 
-`regression-cli.sh` also runs `NO_COLOR=1 sb doctor` to ensure diagnostics remain readable in plain log output.
+`regression-cli.sh` also runs `NO_COLOR=1 sb doctor` to ensure diagnostics remain readable in plain log output. Regular `sb doctor` prints a terminal color sample to help diagnose SSH/client color issues.
 
 On a disposable VPS where snapshot creation is allowed:
 

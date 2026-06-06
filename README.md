@@ -86,7 +86,7 @@ sb status   # 查看运行状态
 | `sb all` | 列出所有节点链接 |
 | `sb log` | 查看日志 |
 | `sb update` | 更新核心/脚本 |
-| `sb doctor` | 系统诊断（环境/依赖/服务/端口/配置/网络） |
+| `sb doctor` | 系统诊断（环境/颜色/依赖/服务/端口/配置/网络） |
 | `sb dry-run <command> [args...]` | 预演命令，不执行写入/重启 |
 | `sb dry-run uninstall` | 预览完全卸载范围，不执行删除 |
 | `sb backup list` | 查看配置快照 |
@@ -272,7 +272,7 @@ bash scripts/smoke-reality.sh
 bash scripts/regression-cli.sh
 ```
 
-`regression-cli.sh` 会同时执行 `NO_COLOR=1 sb doctor`，用于确认诊断输出在无色日志模式下仍然清晰可读。
+`regression-cli.sh` 会同时执行 `NO_COLOR=1 sb doctor`，用于确认诊断输出在无色日志模式下仍然清晰可读；普通 `sb doctor` 会展示终端颜色样例，方便排查 SSH/终端不显示颜色的问题。
 
 如果在一次性测试 VPS 上允许创建快照，运行：
 

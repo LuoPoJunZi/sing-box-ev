@@ -51,7 +51,7 @@ sb dry-run uninstall
 Expected:
 
 - Commands return cleanly.
-- `doctor` gives actionable output for system, dependencies, services, ports, config, network, disk, snapshots, and install manifest.
+- `doctor` gives actionable output for system, terminal colors, dependencies, services, ports, config, network, disk, snapshots, and install manifest.
 - `NO_COLOR=1 sb doctor` remains readable for log copying and CI-style output.
 - `sb dry-run uninstall` prints the uninstall plan without asking for confirmation or deleting anything.
 - Empty backup/node states are handled without stack traces or shell errors.

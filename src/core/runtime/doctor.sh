@@ -15,6 +15,10 @@ runtime_doctor_fail() {
     ((fail++))
 }
 
+runtime_doctor_info() {
+    msg "$(ui_muted "[INFO]") $*"
+}
+
 runtime_doctor_cmd() {
     local cmd=$1 label=${2:-$1}
     if command -v "$cmd" > /dev/null 2>&1; then
@@ -45,6 +49,27 @@ runtime_doctor_disk() {
         fi
     else
         runtime_doctor_warn "磁盘空间: 无法解析 $label 使用率"
+    fi
+}
+
+runtime_doctor_color() {
+    local reason=""
+
+    if [[ -n ${NO_COLOR:-} ]]; then
+        reason="NO_COLOR=1"
+    elif [[ ${TERM:-} == dumb ]]; then
+        reason="TERM=dumb"
+    elif [[ ! -t 1 ]]; then
+        reason="当前输出不是 TTY"
+    fi
+
+    if [[ $ui_color_enabled == 1 ]]; then
+        runtime_doctor_ok "终端颜色: 已启用基础 ANSI 颜色 (30-37)"
+        msg "颜色样例: $(ui_brand "青色标题") $(ui_success "绿色成功") $(ui_warn "黄色提醒") $(ui_error "红色错误") $(ui_muted "灰色提示")"
+        runtime_doctor_info "如果上面的样例没有颜色，请检查终端配色方案或 SSH 客户端设置。"
+    else
+        runtime_doctor_info "终端颜色: 已关闭 (${reason:-原因未知})"
+        runtime_doctor_info "这是预期的纯文本模式，适合日志复制、管道输出和 CI。"
     fi
 }
 
@@ -135,6 +160,9 @@ runtime_doctor() {
     msg "\n============= 系统诊断 (doctor) ============="
 
     runtime_doctor_system_info
+
+    msg "------------- 终端颜色 -------------"
+    runtime_doctor_color
 
     msg "------------- 依赖检查 -------------"
     runtime_doctor_cmd wget
