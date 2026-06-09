@@ -13,6 +13,7 @@
 . "$is_sh_dir/src/core/domain/cli.sh"
 . "$is_sh_dir/src/core/runtime/snapshot.sh"
 . "$is_sh_dir/src/core/runtime/rollback.sh"
+. "$is_sh_dir/src/core/runtime/manifest.sh"
 . "$is_sh_dir/src/core/runtime/doctor.sh"
 . "$is_sh_dir/src/core/runtime/service.sh"
 . "$is_sh_dir/src/core/runtime/cron.sh"
@@ -72,6 +73,8 @@ backup_list() { runtime_snapshot_list; }
 rollback() { runtime_snapshot_restore "$@"; }
 
 doctor() { runtime_doctor; }
+
+manifest() { runtime_manifest_manage "$@"; }
 
 domain() { domain_manage "$@"; }
 

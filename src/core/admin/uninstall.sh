@@ -101,6 +101,7 @@ admin_uninstall_preview() {
     if [[ -f $manifest ]]; then
         manifest_count=$(wc -l < "$manifest" 2> /dev/null)
         msg "- 安装清单: $manifest ($manifest_count 条记录)"
+        msg "- 清单明细: 可执行 sb manifest list 查看"
     else
         msg "- 安装清单: 未找到 $manifest，将按兼容规则预览"
     fi

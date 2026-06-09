@@ -89,6 +89,7 @@ sb status   # 查看运行状态
 | `sb doctor` | 系统诊断（环境/颜色/依赖/服务/端口/配置/网络） |
 | `sb dry-run <command> [args...]` | 预演命令，不执行写入/重启 |
 | `sb dry-run uninstall` | 预览完全卸载范围，不执行删除 |
+| `sb manifest [summary|list|raw]` | 查看安装清单摘要、明细或原文 |
 | `sb backup list` | 查看配置快照 |
 | `sb backup create [reason]` | 手动创建快照 |
 | `sb rollback [snapshot_id]` | 回滚到快照 |
@@ -168,6 +169,7 @@ sb status   # 查看运行状态
       ├─ runtime
       │  ├─ cron.sh                   # 自动维护任务
       │  ├─ doctor.sh                 # 系统诊断
+      │  ├─ manifest.sh               # 安装清单展示
       │  ├─ rollback.sh               # 快照回滚
       │  ├─ service.sh                # 启动/停止/重启服务
       │  └─ snapshot.sh               # 快照创建和列表
@@ -272,7 +274,7 @@ bash scripts/smoke-reality.sh
 bash scripts/regression-cli.sh
 ```
 
-`regression-cli.sh` 会同时执行 `NO_COLOR=1 sb doctor`，用于确认诊断输出在无色日志模式下仍然清晰可读；普通 `sb doctor` 会展示终端颜色样例，方便排查 SSH/终端不显示颜色的问题。
+`regression-cli.sh` 会同时执行 `NO_COLOR=1 sb doctor`、`sb manifest` 和 `sb dry-run uninstall`，用于确认诊断输出、安装清单展示和卸载预演都能在真实环境下正常工作；普通 `sb doctor` 会展示终端颜色样例，方便排查 SSH/终端不显示颜色的问题。
 
 如果在一次性测试 VPS 上允许创建快照，运行：
 

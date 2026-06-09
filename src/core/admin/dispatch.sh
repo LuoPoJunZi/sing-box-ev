@@ -61,6 +61,7 @@ admin_dispatch_command() {
         dns) dns_set ${@:2} ;;
         domain | domains) domain ${@:2} ;;
         doctor | diag) doctor ;;
+        manifest | mf) manifest "$2" ;;
         backup)
             case "${2:-list}" in
                 list | ls) backup_list ;;

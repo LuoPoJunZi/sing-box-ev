@@ -42,6 +42,8 @@ Expected:
 sb doctor
 NO_COLOR=1 sb doctor
 sb backup list
+sb manifest
+sb manifest list
 sb domain list
 sb domain pick
 sb all
@@ -53,6 +55,7 @@ Expected:
 - Commands return cleanly.
 - `doctor` gives actionable output for system, terminal colors, dependencies, services, ports, config, network, disk, snapshots, and install manifest.
 - `NO_COLOR=1 sb doctor` remains readable for log copying and CI-style output.
+- `sb manifest` shows a readable summary and `sb manifest list` shows managed artifact details.
 - `sb dry-run uninstall` prints the uninstall plan without asking for confirmation or deleting anything.
 - Empty backup/node states are handled without stack traces or shell errors.
 
@@ -129,6 +132,7 @@ Expected:
 - Output clearly says `DRY-RUN`.
 - Config files and services are not changed.
 - Uninstall preview lists planned directories, commands, services, tunnel artifacts, firewall ports, and install manifest status without prompting.
+- If a manifest exists, uninstall preview points users to `sb manifest list` for details.
 
 ## 8. Complete Uninstall Checks
 

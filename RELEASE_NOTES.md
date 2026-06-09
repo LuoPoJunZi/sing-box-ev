@@ -1,5 +1,14 @@
 # Release Notes
 
+## v1.5.1
+
+### 主要变化
+
+- 新增 `sb manifest [summary|list|raw]`，可查看安装清单摘要、托管项明细或原始记录。
+- 进阶菜单新增“查看安装清单”，方便从 TUI 直接检查脚本托管的文件、目录、服务、计划任务和防火墙端口。
+- `sb dry-run uninstall` 在发现安装清单时会提示使用 `sb manifest list` 查看卸载相关明细。
+- VPS 回归脚本增加安装清单展示检查，帮助验证真实环境中的 manifest 覆盖情况。
+
 ## v1.5.0
 
 ### 主要变化

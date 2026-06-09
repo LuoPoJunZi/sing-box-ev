@@ -50,6 +50,7 @@ run_with_input "0\n" "$SB_BIN" main
 run "$SB_BIN" doctor
 run_no_color "$SB_BIN" doctor
 run "$SB_BIN" backup list
+run "$SB_BIN" manifest
 run "$SB_BIN" domain list
 run "$SB_BIN" domain pick
 run "$SB_BIN" all

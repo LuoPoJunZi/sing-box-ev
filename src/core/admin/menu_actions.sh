@@ -34,6 +34,7 @@ admin_menu_ask_advanced_action() {
     msg "(10) 查看快照列表"
     msg "(11) 手动创建快照"
     msg "(12) 回滚快照"
+    msg "(13) 查看安装清单"
 
     while :; do
         echo -ne "\n➡️ 请输入对应的数字 $(ui_key "(输入 0 返回主面板)"): "
@@ -45,7 +46,7 @@ admin_menu_ask_advanced_action() {
             is_main_menu
             exit 0
         fi
-        if [[ "$REPLY" =~ ^([1-9]|1[0-2])$ ]]; then
+        if [[ "$REPLY" =~ ^([1-9]|1[0-3])$ ]]; then
             break
         fi
         msg "输入${is_err}"
@@ -71,6 +72,7 @@ admin_menu_run_advanced_action() {
         10) admin_menu_run backup list ;;
         11) admin_menu_run backup create manual-menu ;;
         12) admin_menu_run rollback ;;
+        13) admin_menu_run manifest ;;
     esac
 }
 

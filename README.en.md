@@ -88,6 +88,7 @@ sb status
 | `sb doctor` | Run system diagnostics (environment/colors/dependencies/services/ports/config/network) |
 | `sb dry-run <command> [args...]` | Preview command without applying writes/restarts |
 | `sb dry-run uninstall` | Preview the complete uninstall scope without deleting anything |
+| `sb manifest [summary|list|raw]` | Show install manifest summary, details, or raw records |
 | `sb backup list` | List configuration snapshots |
 | `sb backup create [reason]` | Create a snapshot manually |
 | `sb rollback [snapshot_id]` | Roll back to a snapshot |
@@ -167,6 +168,7 @@ sb status
       ├─ runtime
       │  ├─ cron.sh                   # automatic maintenance tasks
       │  ├─ doctor.sh                 # system diagnostics
+      │  ├─ manifest.sh               # install manifest display
       │  ├─ rollback.sh               # snapshot rollback
       │  ├─ service.sh                # service start/stop/restart
       │  └─ snapshot.sh               # snapshot create/list helpers
@@ -264,7 +266,7 @@ For read-only CLI checks:
 bash scripts/regression-cli.sh
 ```
 
-`regression-cli.sh` also runs `NO_COLOR=1 sb doctor` to ensure diagnostics remain readable in plain log output. Regular `sb doctor` prints a terminal color sample to help diagnose SSH/client color issues.
+`regression-cli.sh` also runs `NO_COLOR=1 sb doctor`, `sb manifest`, and `sb dry-run uninstall` to ensure diagnostics, manifest display, and uninstall preview work in real environments. Regular `sb doctor` prints a terminal color sample to help diagnose SSH/client color issues.
 
 On a disposable VPS where snapshot creation is allowed:
 
