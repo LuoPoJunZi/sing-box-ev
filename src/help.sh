@@ -38,7 +38,7 @@ show_help() {
                 "管理:"
                 "   un, uninstall                                   卸载"
                 "   u, update [core | sh | caddy] [ver]             更新"
-                "   doctor, diag                                    系统诊断 (环境/颜色/依赖/服务/端口/配置/网络)"
+                "   doctor, diag                                    系统诊断 (环境/颜色/依赖/服务/端口/配置/网络/客户端兼容)"
                 "   manifest [summary|list|raw]                     查看安装清单"
                 "   backup [list|create [reason]]                   配置快照管理"
                 "   rollback [snapshot_id]                          回滚到指定快照"

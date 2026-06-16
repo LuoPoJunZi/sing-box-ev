@@ -85,7 +85,7 @@ sb status
 | `sb all` | Print all node URLs |
 | `sb log` | Tail runtime logs |
 | `sb update` | Update core/script |
-| `sb doctor` | Run system diagnostics (environment/colors/dependencies/services/ports/config/network) |
+| `sb doctor` | Run system diagnostics (environment/colors/dependencies/services/ports/config/network/client compatibility) |
 | `sb dry-run <command> [args...]` | Preview command without applying writes/restarts |
 | `sb dry-run uninstall` | Preview the complete uninstall scope without deleting anything |
 | `sb manifest [summary|list|raw]` | Show install manifest summary, details, or raw records |
@@ -164,6 +164,7 @@ sb status
       │  ├─ info.sh                   # node information display
       │  ├─ parse.sh                  # config reading and field parsing
       │  ├─ protocol.sh               # protocol JSON fragment preparation
+      │  ├─ tls_pin.sh                # TLS certificate pinning hints
       │  └─ url.sh                    # URL/QR/all-node output
       ├─ runtime
       │  ├─ cron.sh                   # automatic maintenance tasks
@@ -188,7 +189,7 @@ sb status
 
 - `src/core/domain/`: Reality domain pool, weights, health checks, auto-pick
 - `src/core/runtime/`: diagnostics, snapshots, rollback, service, cron
-- `src/core/query/`: config parsing, node display, URL/QR output
+- `src/core/query/`: config parsing, node display, URL/QR output, client TLS pinning hints
 - `src/core/node/`: node add/change/delete flows
 - `src/core/admin/`: menu rendering, menu action mapping, CLI dispatch, update, uninstall
 - `src/core/env/`: constants, protocol lists, defaults

@@ -131,6 +131,62 @@ runtime_doctor_manifest() {
     fi
 }
 
+runtime_doctor_client_compat() {
+    local conf_file="" inbound_type="" transport_type=""
+    local trojan_count=0 hysteria2_count=0 tuic_count=0 vmess_quic_count=0 affected_count=0
+    local conf_files=()
+
+    if [[ ! -d $is_conf_dir ]]; then
+        runtime_doctor_warn "客户端兼容: 节点配置目录不存在，无法扫描"
+        return
+    fi
+    if ! command -v jq > /dev/null 2>&1; then
+        runtime_doctor_warn "客户端兼容: jq 缺失，无法扫描协议类型"
+        return
+    fi
+
+    mapfile -t conf_files < <(find "$is_conf_dir" -maxdepth 1 -type f -name '*.json' 2> /dev/null | sort)
+    if [[ ${#conf_files[@]} -eq 0 ]]; then
+        runtime_doctor_info "客户端兼容: 未发现节点配置"
+        return
+    fi
+
+    for conf_file in "${conf_files[@]}"; do
+        inbound_type=$(jq -r '.inbounds[0].type // ""' "$conf_file" 2> /dev/null)
+        transport_type=$(jq -r '.inbounds[0].transport.type // ""' "$conf_file" 2> /dev/null)
+        case $inbound_type in
+            trojan)
+                ((trojan_count++))
+                ;;
+            hysteria2)
+                ((hysteria2_count++))
+                ;;
+            tuic)
+                ((tuic_count++))
+                ;;
+            vmess)
+                if [[ $transport_type == "quic" ]]; then
+                    ((vmess_quic_count++))
+                fi
+                ;;
+        esac
+    done
+
+    affected_count=$((hysteria2_count + tuic_count + vmess_quic_count))
+    if [[ $trojan_count -gt 0 ]]; then
+        runtime_doctor_info "客户端兼容: Trojan $trojan_count 个，按项目策略保留无域名/自签证书兼容"
+    fi
+    if [[ $affected_count -gt 0 ]]; then
+        runtime_doctor_warn "客户端兼容: 发现 $affected_count 个节点建议迁移到证书固定指纹"
+        [[ $hysteria2_count -gt 0 ]] && msg "  - Hysteria2: $hysteria2_count 个，建议使用 pinSHA256 并关闭 insecure"
+        [[ $tuic_count -gt 0 ]] && msg "  - TUIC: $tuic_count 个，建议使用 certificate_public_key_sha256 并关闭 insecure"
+        [[ $vmess_quic_count -gt 0 ]] && msg "  - VMess-QUIC: $vmess_quic_count 个，建议使用 pinnedPeerCertSha256 或迁移到 Reality/CFtunnel"
+        msg "  - 运行 sb info <配置名> 可查看当前证书指纹和配置示例"
+    else
+        runtime_doctor_ok "客户端兼容: 未发现 Hysteria2/TUIC/VMess-QUIC 指纹迁移风险"
+    fi
+}
+
 runtime_doctor_system_info() {
     local os_name="" kernel="" arch=""
 
@@ -206,6 +262,9 @@ runtime_doctor() {
     runtime_doctor_manifest
     runtime_doctor_disk "$is_core_dir" "/etc/sing-box"
     runtime_doctor_disk "$is_log_dir" "/var/log/sing-box"
+
+    msg "------------- 客户端兼容 -------------"
+    runtime_doctor_client_compat
 
     msg "------------- 服务与端口 -------------"
     if [[ $fail_systemd -eq 0 ]]; then

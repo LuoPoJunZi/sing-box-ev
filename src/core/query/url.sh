@@ -37,6 +37,9 @@ query_url_qr() {
         if [[ $1 == 'url' ]]; then
             msg "\n------------- $is_config_name & URL 链接 -------------"
             msg "\n$(ui_link "$is_url")\n"
+            if [[ $is_tls_pin_profile ]]; then
+                query_tls_pin_print_snippet "$is_tls_pin_profile" "$is_tls_pin_server_name"
+            fi
             footer_msg
         else
             link="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${is_url}"

@@ -1,5 +1,14 @@
 # Release Notes
 
+## v1.5.2
+
+### 主要变化
+
+- 针对 v2rayN / Xray 后续禁用 `allowInsecure` 的变化，新增 Hysteria2、TUIC、VMess-QUIC 的证书固定指纹提示。
+- `sb info` 和 `sb url` 会在相关节点下显示推荐客户端配置片段，方便把 `pinSHA256`、`certificate_public_key_sha256` 或 `pinnedPeerCertSha256` 填入客户端。
+- `sb doctor` 新增客户端兼容扫描，可提示现有 Hysteria2、TUIC、VMess-QUIC 节点是否建议迁移到证书固定指纹。
+- Trojan 按项目策略保留“无域名 / 自签证书”兼容路线，输出中会明确提示该协议仍依赖兼容导入参数。
+
 ## v1.5.1
 
 ### 主要变化

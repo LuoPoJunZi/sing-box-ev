@@ -3,6 +3,11 @@
 query_info() {
     if [[ ! $is_protocol ]]; then get info $1; fi
     is_value_style=$blue
+    is_insecure=
+    is_quic_add=
+    is_type=
+    is_tls_pin_profile=
+    is_tls_pin_server_name=
 
     if [[ -z "$custom_remark" ]]; then
         local tmp_name="${is_config_name%.json}"
@@ -57,6 +62,8 @@ query_info() {
                 fi
                 if [[ $net == "quic" ]]; then
                     is_insecure=1
+                    is_tls_pin_profile=vmess-quic
+                    is_tls_pin_server_name=$is_addr
                     is_info_show+=(8 9 20)
                     is_info_str+=(tls h3 true)
                     is_quic_add=",tls:\"tls\",alpn:\"h3\""
@@ -73,12 +80,16 @@ query_info() {
             ;;
         trojan)
             is_insecure=1
+            is_tls_pin_profile=trojan-self-signed
+            is_tls_pin_server_name=$is_addr
             is_can_change=(0 1 4)
             is_info_show=(0 1 2 10 4 8 20)
             is_url="$is_protocol://$password@$is_addr:$port?type=tcp&security=tls&allowInsecure=1#$custom_remark"
             is_info_str=($is_protocol $is_addr $port $password tcp tls true)
             ;;
         hy*)
+            is_tls_pin_profile=hysteria2
+            is_tls_pin_server_name=$is_addr
             is_can_change=(0 1 4)
             is_info_show=(0 1 2 10 8 9 20)
             is_url="$is_protocol://$password@$is_addr:$port?alpn=h3&insecure=1#$custom_remark"
@@ -86,6 +97,8 @@ query_info() {
             ;;
         tuic)
             is_insecure=1
+            is_tls_pin_profile=tuic
+            is_tls_pin_server_name=$is_addr
             is_can_change=(0 1 4 5)
             is_info_show=(0 1 2 3 10 8 9 20 21)
             is_url="$is_protocol://$uuid:$password@$is_addr:$port?alpn=h3&allow_insecure=1&congestion_control=bbr#$custom_remark"
@@ -135,7 +148,11 @@ query_info() {
     if [[ $is_url ]]; then
         msg "------------- ${info_list[12]} -------------"
         msg "$(ui_link "$is_url")"
-        if [[ $is_insecure ]]; then warn "某些客户端导入URL需手动将跳过证书验证设置为 true"; fi
+        if [[ $is_tls_pin_profile ]]; then
+            query_tls_pin_print_snippet "$is_tls_pin_profile" "$is_tls_pin_server_name"
+        elif [[ $is_insecure ]]; then
+            warn "某些客户端导入URL需手动将跳过证书验证设置为 true"
+        fi
     fi
     if [[ $is_no_auto_tls ]]; then
         msg "------------- no-auto-tls INFO -------------"

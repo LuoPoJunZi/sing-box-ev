@@ -86,7 +86,7 @@ sb status   # 查看运行状态
 | `sb all` | 列出所有节点链接 |
 | `sb log` | 查看日志 |
 | `sb update` | 更新核心/脚本 |
-| `sb doctor` | 系统诊断（环境/颜色/依赖/服务/端口/配置/网络） |
+| `sb doctor` | 系统诊断（环境/颜色/依赖/服务/端口/配置/网络/客户端兼容） |
 | `sb dry-run <command> [args...]` | 预演命令，不执行写入/重启 |
 | `sb dry-run uninstall` | 预览完全卸载范围，不执行删除 |
 | `sb manifest [summary|list|raw]` | 查看安装清单摘要、明细或原文 |
@@ -165,6 +165,7 @@ sb status   # 查看运行状态
       │  ├─ info.sh                   # 节点信息展示
       │  ├─ parse.sh                  # 配置读取和字段解析
       │  ├─ protocol.sh               # 协议 JSON 片段准备
+      │  ├─ tls_pin.sh                # TLS 证书固定指纹提示
       │  └─ url.sh                    # URL/二维码/全部节点输出
       ├─ runtime
       │  ├─ cron.sh                   # 自动维护任务
@@ -189,7 +190,7 @@ sb status   # 查看运行状态
 
 - `src/core/domain/`：Reality 域名池、权重、健康检查、自动选择
 - `src/core/runtime/`：诊断、快照、回滚、服务、Cron
-- `src/core/query/`：配置解析、节点展示、URL/二维码输出
+- `src/core/query/`：配置解析、节点展示、URL/二维码输出、客户端 TLS 指纹提示
 - `src/core/node/`：节点新增、修改、删除
 - `src/core/admin/`：菜单展示、菜单动作映射、CLI 分发、更新、卸载
 - `src/core/env/`：常量、协议列表、默认值
