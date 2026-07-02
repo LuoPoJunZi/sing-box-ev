@@ -35,6 +35,13 @@ first_config_name() {
     find "$CONF_DIR" -maxdepth 1 -type f -name '*.json' -printf '%f\n' 2> /dev/null | sort | head -n 1
 }
 
+first_compat_config_name() {
+    find "$CONF_DIR" -maxdepth 1 -type f -name '*.json' -printf '%f\n' 2> /dev/null |
+        grep -Ei 'Hysteria2|TUIC|VMess-QUIC|Trojan' |
+        sort |
+        head -n 1
+}
+
 echo "[regression-cli] using command: $SB_BIN"
 echo "[regression-cli] host: $(uname -a 2> /dev/null || true)"
 if [[ -f /etc/os-release ]]; then
@@ -65,6 +72,14 @@ if [[ -n $config_name ]]; then
 else
     echo
     echo "[regression-cli] no existing config found under $CONF_DIR; skipping info/url/change dry-run checks"
+fi
+
+compat_config_name="$(first_compat_config_name || true)"
+if [[ -n $compat_config_name && $compat_config_name != "$config_name" ]]; then
+    echo
+    echo "[regression-cli] found compatibility-focused config: $compat_config_name"
+    run "$SB_BIN" info "$compat_config_name"
+    run "$SB_BIN" url "$compat_config_name"
 fi
 
 if [[ $ALLOW_WRITES == "1" ]]; then

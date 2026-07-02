@@ -54,6 +54,7 @@ Expected:
 
 - Commands return cleanly.
 - `doctor` gives actionable output for system, terminal colors, dependencies, services, ports, config, network, disk, snapshots, install manifest, and client compatibility.
+- `doctor` lists concrete config names for Trojan/Hysteria2/TUIC/VMess-QUIC when those compatibility-sensitive nodes exist.
 - `NO_COLOR=1 sb doctor` remains readable for log copying and CI-style output.
 - `sb manifest` shows a readable summary and `sb manifest list` shows managed artifact details.
 - `sb dry-run uninstall` prints the uninstall plan without asking for confirmation or deleting anything.
@@ -84,7 +85,7 @@ Expected:
 
 - Config files are created under `/etc/sing-box/conf`.
 - URLs are copy-friendly.
-- Hysteria2/TUIC/VMess-QUIC node details show certificate-pinning guidance when applicable.
+- Hysteria2/TUIC/VMess-QUIC node details separate compatibility URLs from recommended certificate-pinning guidance when applicable.
 - Trojan keeps the no-domain/self-signed compatibility notice when applicable.
 - `sing-box check` succeeds after create/change/delete.
 - Service can restart after each write.

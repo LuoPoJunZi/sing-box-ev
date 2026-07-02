@@ -1,5 +1,14 @@
 # Release Notes
 
+## v1.5.3
+
+### 主要变化
+
+- 优化 Hysteria2、TUIC、VMess-QUIC 的节点输出，把“兼容导入链接”和“推荐安全配置”分区展示，减少用户误把旧兼容参数当长期方案使用。
+- `sb info` 和 `sb url` 的证书固定指纹提示增加操作步骤，提示先确认旧链接可导入，再关闭跳过证书验证并填入指纹。
+- `sb doctor` 的客户端兼容扫描会列出受影响配置名，并按协议给出 `pinSHA256`、`certificate_public_key_sha256`、`pinnedPeerCertSha256` 的处理建议。
+- VPS 回归脚本会优先抽查 Trojan、Hysteria2、TUIC、VMess-QUIC 等兼容相关配置，帮助在真实环境中验证输出可读性。
+
 ## v1.5.2
 
 ### 主要变化

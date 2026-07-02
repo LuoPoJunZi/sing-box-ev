@@ -267,7 +267,7 @@ For read-only CLI checks:
 bash scripts/regression-cli.sh
 ```
 
-`regression-cli.sh` also runs `NO_COLOR=1 sb doctor`, `sb manifest`, and `sb dry-run uninstall` to ensure diagnostics, manifest display, and uninstall preview work in real environments. Regular `sb doctor` prints a terminal color sample to help diagnose SSH/client color issues.
+`regression-cli.sh` also runs `NO_COLOR=1 sb doctor`, `sb manifest`, and `sb dry-run uninstall` to ensure diagnostics, manifest display, and uninstall preview work in real environments. Regular `sb doctor` prints a terminal color sample and lists client-compatibility config names, helping diagnose SSH/client color issues and protocol import risks. The regression script also prioritizes `info/url` checks for Trojan, Hysteria2, TUIC, and VMess-QUIC when such configs exist.
 
 On a disposable VPS where snapshot creation is allowed:
 

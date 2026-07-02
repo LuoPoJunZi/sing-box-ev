@@ -131,10 +131,35 @@ runtime_doctor_manifest() {
     fi
 }
 
+runtime_doctor_join_limited() {
+    local limit=$1 count=0 shown=0 item="" output=""
+    shift
+    count=$#
+
+    for item in "$@"; do
+        ((shown++))
+        if ((shown > limit)); then
+            break
+        fi
+        if [[ $output ]]; then
+            output="$output, $item"
+        else
+            output="$item"
+        fi
+    done
+
+    if ((count > limit)); then
+        output="$output, ...+$((count - limit))"
+    fi
+
+    echo "$output"
+}
+
 runtime_doctor_client_compat() {
-    local conf_file="" inbound_type="" transport_type=""
+    local conf_file="" conf_name="" inbound_type="" transport_type=""
     local trojan_count=0 hysteria2_count=0 tuic_count=0 vmess_quic_count=0 affected_count=0
     local conf_files=()
+    local trojan_items=() hysteria2_items=() tuic_items=() vmess_quic_items=()
 
     if [[ ! -d $is_conf_dir ]]; then
         runtime_doctor_warn "客户端兼容: 节点配置目录不存在，无法扫描"
@@ -152,21 +177,26 @@ runtime_doctor_client_compat() {
     fi
 
     for conf_file in "${conf_files[@]}"; do
+        conf_name=$(basename "$conf_file")
         inbound_type=$(jq -r '.inbounds[0].type // ""' "$conf_file" 2> /dev/null)
         transport_type=$(jq -r '.inbounds[0].transport.type // ""' "$conf_file" 2> /dev/null)
         case $inbound_type in
             trojan)
                 ((trojan_count++))
+                trojan_items+=("$conf_name")
                 ;;
             hysteria2)
                 ((hysteria2_count++))
+                hysteria2_items+=("$conf_name")
                 ;;
             tuic)
                 ((tuic_count++))
+                tuic_items+=("$conf_name")
                 ;;
             vmess)
                 if [[ $transport_type == "quic" ]]; then
                     ((vmess_quic_count++))
+                    vmess_quic_items+=("$conf_name")
                 fi
                 ;;
         esac
@@ -175,13 +205,23 @@ runtime_doctor_client_compat() {
     affected_count=$((hysteria2_count + tuic_count + vmess_quic_count))
     if [[ $trojan_count -gt 0 ]]; then
         runtime_doctor_info "客户端兼容: Trojan $trojan_count 个，按项目策略保留无域名/自签证书兼容"
+        msg "  - Trojan: $(runtime_doctor_join_limited 6 "${trojan_items[@]}")"
     fi
     if [[ $affected_count -gt 0 ]]; then
         runtime_doctor_warn "客户端兼容: 发现 $affected_count 个节点建议迁移到证书固定指纹"
-        [[ $hysteria2_count -gt 0 ]] && msg "  - Hysteria2: $hysteria2_count 个，建议使用 pinSHA256 并关闭 insecure"
-        [[ $tuic_count -gt 0 ]] && msg "  - TUIC: $tuic_count 个，建议使用 certificate_public_key_sha256 并关闭 insecure"
-        [[ $vmess_quic_count -gt 0 ]] && msg "  - VMess-QUIC: $vmess_quic_count 个，建议使用 pinnedPeerCertSha256 或迁移到 Reality/CFtunnel"
-        msg "  - 运行 sb info <配置名> 可查看当前证书指纹和配置示例"
+        if [[ $hysteria2_count -gt 0 ]]; then
+            msg "  - Hysteria2: $(runtime_doctor_join_limited 6 "${hysteria2_items[@]}")"
+            msg "    建议: 使用 pinSHA256，关闭 insecure"
+        fi
+        if [[ $tuic_count -gt 0 ]]; then
+            msg "  - TUIC: $(runtime_doctor_join_limited 6 "${tuic_items[@]}")"
+            msg "    建议: 使用 certificate_public_key_sha256，关闭 insecure"
+        fi
+        if [[ $vmess_quic_count -gt 0 ]]; then
+            msg "  - VMess-QUIC: $(runtime_doctor_join_limited 6 "${vmess_quic_items[@]}")"
+            msg "    建议: 使用 pinnedPeerCertSha256，或迁移到 Reality/CFtunnel"
+        fi
+        msg "  - 处理顺序: 先运行 sb info <配置名> 查看指纹，再在客户端关闭跳过证书验证"
     else
         runtime_doctor_ok "客户端兼容: 未发现 Hysteria2/TUIC/VMess-QUIC 指纹迁移风险"
     fi
@@ -225,6 +265,7 @@ runtime_doctor() {
     runtime_doctor_cmd curl
     runtime_doctor_cmd tar
     runtime_doctor_cmd jq
+    runtime_doctor_cmd openssl
     if ! command -v jq > /dev/null 2>&1; then
         warn_jq=1
     fi

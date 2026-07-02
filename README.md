@@ -275,7 +275,7 @@ bash scripts/smoke-reality.sh
 bash scripts/regression-cli.sh
 ```
 
-`regression-cli.sh` 会同时执行 `NO_COLOR=1 sb doctor`、`sb manifest` 和 `sb dry-run uninstall`，用于确认诊断输出、安装清单展示和卸载预演都能在真实环境下正常工作；普通 `sb doctor` 会展示终端颜色样例，方便排查 SSH/终端不显示颜色的问题。
+`regression-cli.sh` 会同时执行 `NO_COLOR=1 sb doctor`、`sb manifest` 和 `sb dry-run uninstall`，用于确认诊断输出、安装清单展示和卸载预演都能在真实环境下正常工作；普通 `sb doctor` 会展示终端颜色样例，并列出需要关注的客户端兼容配置名，方便排查 SSH/终端不显示颜色或协议导入兼容问题。回归脚本也会优先抽查 Trojan、Hysteria2、TUIC、VMess-QUIC 等兼容相关节点的 `info/url` 输出。
 
 如果在一次性测试 VPS 上允许创建快照，运行：
 
