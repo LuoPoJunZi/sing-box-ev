@@ -314,6 +314,8 @@ ALLOW_WRITES=1 bash scripts/regression-cli.sh
 
 - `.github/workflows/release.yml`
 - 从 `src/init.sh` 的 `is_sh_ver` 提取版本
+- 版本号使用 `v年.月.日`：两位年份、不补零的月份和日期，例如 `v26.7.15`
+- 同一天只发布一个版本；当天的修改应在发布前合并到同一份 Release Notes
 - 从 `RELEASE_NOTES.md` 中提取当前版本的 `### 主要变化`
 - 若 tag 不存在则自动打包发布
 

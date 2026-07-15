@@ -105,6 +105,7 @@ query_info() {
             is_info_str=($is_protocol $is_addr $port $uuid $password tls h3 true bbr)
             ;;
         reality)
+            local is_reality_sid_param=""
             is_value_style=$magenta
             is_can_change=(0 1 5 9 10)
             is_info_show=(0 1 2 3 15 4 8 16 17 18)
@@ -116,7 +117,12 @@ query_info() {
                 is_info_show=(${is_info_show[@]/15/})
             fi
             is_info_str=($is_protocol $is_addr $port $uuid $is_flow $is_net_type reality $is_servername chrome $is_public_key)
-            is_url="$is_protocol://$uuid@$is_addr:$port?encryption=none&security=reality&flow=$is_flow&type=$is_net_type&sni=$is_servername&pbk=$is_public_key&fp=chrome#$custom_remark"
+            if [[ $is_short_id ]]; then
+                is_info_show+=(22)
+                is_info_str+=("$is_short_id")
+                is_reality_sid_param="&sid=$is_short_id"
+            fi
+            is_url="$is_protocol://$uuid@$is_addr:$port?encryption=none&security=reality&flow=$is_flow&type=$is_net_type&sni=$is_servername&pbk=$is_public_key&fp=chrome$is_reality_sid_param#$custom_remark"
             ;;
         direct)
             is_can_change=(0 1 7 8)

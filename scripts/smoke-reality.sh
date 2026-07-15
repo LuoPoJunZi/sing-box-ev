@@ -56,9 +56,18 @@ if ! grep -q 'sni=' <<< "$url_auto"; then
     echo "[smoke-reality] url missing sni for $created_auto"
     exit 1
 fi
+if ! grep -Eq 'sid=[0-9a-fA-F]{8}' <<< "$url_auto"; then
+    echo "[smoke-reality] url missing valid short id for $created_auto"
+    exit 1
+fi
 auto_sni="$(jq -r '.inbounds[0].tls.server_name // empty' "$CONF_DIR/$created_auto")"
 if [[ -z "$auto_sni" ]]; then
     echo "[smoke-reality] auto sni is empty in config: $created_auto"
+    exit 1
+fi
+auto_short_id="$(jq -r '.inbounds[0].tls.reality.short_id[0] // empty' "$CONF_DIR/$created_auto")"
+if [[ ! $auto_short_id =~ ^[0-9a-fA-F]{8}$ ]]; then
+    echo "[smoke-reality] config has invalid short id: $created_auto"
     exit 1
 fi
 
@@ -77,6 +86,10 @@ echo "[smoke-reality] verify manual sni and url: $created_manual"
 url_manual="$("$SB_BIN" url "$created_manual" 2> /dev/null || true)"
 if ! grep -q "sni=$manual_sni" <<< "$url_manual"; then
     echo "[smoke-reality] manual url sni mismatch for $created_manual"
+    exit 1
+fi
+if ! grep -Eq 'sid=[0-9a-fA-F]{8}' <<< "$url_manual"; then
+    echo "[smoke-reality] manual url missing valid short id for $created_manual"
     exit 1
 fi
 cfg_manual_sni="$(jq -r '.inbounds[0].tls.server_name // empty' "$CONF_DIR/$created_manual")"

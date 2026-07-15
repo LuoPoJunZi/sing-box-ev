@@ -58,6 +58,7 @@ info_list=(
     "用户名 (Username)"
     "跳过证书验证 (allowInsecure)"
     "拥塞控制算法 (congestion_control)"
+    "Reality Short ID"
 )
 
 change_list=(

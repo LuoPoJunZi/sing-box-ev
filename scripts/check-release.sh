@@ -11,8 +11,16 @@ if [[ -z $version ]]; then
     exit 1
 fi
 
-if [[ ! $version =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+if [[ ! $version =~ ^v([0-9]{2})\.([1-9]|1[0-2])\.([1-9]|[12][0-9]|3[01])$ ]]; then
     echo "[release] invalid version format: $version"
+    echo "[release] expected date version: vYY.M.D (example: v26.7.15)"
+    exit 1
+fi
+
+release_date="20${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}"
+normalized_version="$(date -d "$release_date" '+v%y.%-m.%-d' 2> /dev/null || true)"
+if [[ $normalized_version != "$version" ]]; then
+    echo "[release] invalid calendar date: $version"
     exit 1
 fi
 

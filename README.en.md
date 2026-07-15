@@ -308,6 +308,8 @@ If you extend selection strategy, prioritize adding it under `src/core/domain/` 
 
 - Workflow: `.github/workflows/release.yml`
 - Version source: `is_sh_ver` in `src/init.sh`
+- Version format: `vYY.M.D`, using a two-digit year and month/day without leading zeros, for example `v26.7.15`
+- Publish at most one version per day; combine same-day changes into the same release notes before publishing
 - Release body source: the matching version's `### 主要变化` section in `RELEASE_NOTES.md`
 - Auto-release runs when version tag is new
 

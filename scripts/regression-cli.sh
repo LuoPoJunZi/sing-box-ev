@@ -37,7 +37,7 @@ first_config_name() {
 
 first_compat_config_name() {
     find "$CONF_DIR" -maxdepth 1 -type f -name '*.json' -printf '%f\n' 2> /dev/null |
-        grep -Ei 'Hysteria2|TUIC|VMess-QUIC|Trojan' |
+        grep -Ei 'Hysteria2|TUIC|VMess-QUIC|Trojan|VLESS.*REALITY' |
         sort |
         head -n 1
 }

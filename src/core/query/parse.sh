@@ -39,9 +39,9 @@ query_get() {
             get file $2
             if [[ $is_config_file ]]; then
                 is_json_str=$(cat $is_conf_dir/"$is_config_file" | sed s#//.*##)
-                is_json_data=$(jq '(.inbounds[0]|.type,.listen_port,(.users[0]|.uuid,.password,.username),.method,.password,.override_port,.override_address,(.transport|.type,.path,.headers.host),(.tls|.server_name,.reality.private_key)),(.outbounds[1].tag)' <<< $is_json_str)
+                is_json_data=$(jq '(.inbounds[0]|.type,.listen_port,(.users[0]|.uuid,.password,.username),.method,.password,.override_port,.override_address,(.transport|.type,.path,.headers.host),(.tls|.server_name,.reality.private_key,.reality.short_id[0])),(.outbounds[1].tag)' <<< $is_json_str)
                 if [[ $? != 0 ]]; then err "无法读取此文件: $is_config_file"; fi
-                is_up_var_set=(null is_protocol port uuid password username ss_method ss_password door_port door_addr net_type path host is_servername is_private_key is_public_key)
+                is_up_var_set=(null is_protocol port uuid password username ss_method ss_password door_port door_addr net_type path host is_servername is_private_key is_short_id is_public_key)
                 if [[ $is_debug ]]; then msg "\n------------- debug: $is_config_file -------------"; fi
                 i=0
                 local json_items=()

@@ -1,5 +1,15 @@
 # Release Notes
 
+## v26.7.15
+
+### 主要变化
+
+- 版本号改为 `v年.月.日` 格式，后续发布可直接看出版本日期；本次版本为 `v26.7.15`。
+- 新建 VLESS-REALITY 节点会生成明确的 8 位十六进制 Short ID，并在分享链接中携带 `sid`，提升 v2rayN、Xray 等客户端的导入兼容性。
+- `sb doctor` 新增 VLESS-REALITY 专项诊断，可检查 UUID、SNI、Reality 密钥、Short ID 和 TCP 监听状态。
+- 诊断输出会明确区分 VLESS 的 TCP 与 Hysteria2 的 UDP，并提醒检查云厂商安全组中的 TCP 入站规则。
+- Reality 回归测试新增配置 Short ID 与分享链接 `sid` 校验，降低发布后节点链接不可用的风险。
+
 ## v1.5.3
 
 ### 主要变化

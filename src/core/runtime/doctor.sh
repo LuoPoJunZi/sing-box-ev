@@ -74,14 +74,19 @@ runtime_doctor_color() {
 }
 
 runtime_doctor_port_listening() {
-    local port=$1
+    local port=$1 mode=${2:-both} listen_args="-lntu"
+
+    case $mode in
+        tcp) listen_args="-lnt" ;;
+        udp) listen_args="-lnu" ;;
+    esac
 
     if command -v ss > /dev/null 2>&1; then
-        ss -H -lntu 2> /dev/null | awk '{print $5}' | grep -Eq "(^|:|\\.)${port}$"
+        ss -H "$listen_args" 2> /dev/null | awk '{print $5}' | grep -Eq "(^|:|\\.)${port}$"
         return
     fi
     if command -v netstat > /dev/null 2>&1; then
-        netstat -lntu 2> /dev/null | awk 'NR > 2 {print $4}' | grep -Eq "(^|:|\\.)${port}$"
+        netstat "$listen_args" 2> /dev/null | awk 'NR > 2 {print $4}' | grep -Eq "(^|:|\\.)${port}$"
         return
     fi
     return 2
@@ -227,6 +232,85 @@ runtime_doctor_client_compat() {
     fi
 }
 
+runtime_doctor_reality() {
+    local conf_file="" conf_name="" inbound_type="" reality_enabled=""
+    local port="" uuid="" server_name="" handshake_server="" private_key="" public_key="" short_id=""
+    local reality_count=0 field_issue_count=0 short_id_issue_count=0 listen_issue_count=0 listen_unchecked=0
+    local conf_files=() field_items=() short_id_items=() listen_items=()
+
+    if [[ ! -d $is_conf_dir ]] || ! command -v jq > /dev/null 2>&1; then
+        return
+    fi
+
+    mapfile -t conf_files < <(find "$is_conf_dir" -maxdepth 1 -type f -name '*.json' 2> /dev/null | sort)
+    for conf_file in "${conf_files[@]}"; do
+        inbound_type=$(jq -r '.inbounds[0].type // ""' "$conf_file" 2> /dev/null)
+        reality_enabled=$(jq -r '.inbounds[0].tls.reality.enabled // false' "$conf_file" 2> /dev/null)
+        if [[ $inbound_type != "vless" || $reality_enabled != "true" ]]; then
+            continue
+        fi
+
+        ((reality_count++))
+        conf_name=$(basename "$conf_file")
+        port=$(jq -r '.inbounds[0].listen_port // ""' "$conf_file" 2> /dev/null)
+        uuid=$(jq -r '.inbounds[0].users[0].uuid // ""' "$conf_file" 2> /dev/null)
+        server_name=$(jq -r '.inbounds[0].tls.server_name // ""' "$conf_file" 2> /dev/null)
+        handshake_server=$(jq -r '.inbounds[0].tls.reality.handshake.server // ""' "$conf_file" 2> /dev/null)
+        private_key=$(jq -r '.inbounds[0].tls.reality.private_key // ""' "$conf_file" 2> /dev/null)
+        public_key=$(jq -r '[.outbounds[]? | (.tag // "") | select(startswith("public_key_"))][0] // ""' "$conf_file" 2> /dev/null)
+        short_id=$(jq -r '.inbounds[0].tls.reality.short_id[0] // ""' "$conf_file" 2> /dev/null)
+
+        if [[ ! $port =~ ^[0-9]+$ || -z $uuid || -z $server_name || -z $private_key || -z $public_key || $handshake_server != "$server_name" ]]; then
+            ((field_issue_count++))
+            field_items+=("$conf_name")
+        fi
+        if [[ ! $short_id =~ ^[0-9a-fA-F]{1,8}$ ]]; then
+            ((short_id_issue_count++))
+            short_id_items+=("$conf_name")
+        fi
+        if [[ $port =~ ^[0-9]+$ ]]; then
+            if runtime_doctor_port_listening "$port" tcp; then
+                :
+            else
+                case $? in
+                    1)
+                        ((listen_issue_count++))
+                        listen_items+=("$conf_name:$port/tcp")
+                        ;;
+                    2) listen_unchecked=1 ;;
+                esac
+            fi
+        fi
+    done
+
+    if [[ $reality_count -eq 0 ]]; then
+        runtime_doctor_info "VLESS-REALITY: 未发现配置"
+        return
+    fi
+
+    runtime_doctor_info "VLESS-REALITY 使用 TCP；Hysteria2 使用 UDP，两者端口可用性需要分别检查"
+    if [[ $field_issue_count -gt 0 ]]; then
+        runtime_doctor_warn "VLESS-REALITY: $field_issue_count 个配置缺少关键字段或 SNI/握手目标不一致"
+        msg "  - 配置: $(runtime_doctor_join_limited 6 "${field_items[@]}")"
+    else
+        runtime_doctor_ok "VLESS-REALITY: $reality_count 个配置的 UUID、SNI、密钥和握手目标完整"
+    fi
+    if [[ $short_id_issue_count -gt 0 ]]; then
+        runtime_doctor_warn "VLESS-REALITY: $short_id_issue_count 个旧配置未使用明确 Short ID，部分客户端可能导入失败"
+        msg "  - 配置: $(runtime_doctor_join_limited 6 "${short_id_items[@]}")"
+        msg "  - 修复: 执行 sb change <配置名> key auto，重新导入包含 sid 的链接"
+    else
+        runtime_doctor_ok "VLESS-REALITY: Short ID 格式有效"
+    fi
+    if [[ $listen_issue_count -gt 0 ]]; then
+        runtime_doctor_warn "VLESS-REALITY: 未检测到 $listen_issue_count 个 TCP 端口正在监听"
+        msg "  - 配置: $(runtime_doctor_join_limited 6 "${listen_items[@]}")"
+    elif [[ $listen_unchecked -eq 0 ]]; then
+        runtime_doctor_ok "VLESS-REALITY: 本机 TCP 监听正常"
+    fi
+    runtime_doctor_info "即使本机监听正常，云厂商安全组仍需单独放行对应 TCP 端口"
+}
+
 runtime_doctor_system_info() {
     local os_name="" kernel="" arch=""
 
@@ -306,6 +390,9 @@ runtime_doctor() {
 
     msg "------------- 客户端兼容 -------------"
     runtime_doctor_client_compat
+
+    msg "------------- VLESS / Reality -------------"
+    runtime_doctor_reality
 
     msg "------------- 服务与端口 -------------"
     if [[ $fail_systemd -eq 0 ]]; then

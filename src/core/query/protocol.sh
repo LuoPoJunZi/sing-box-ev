@@ -21,7 +21,8 @@ query_prepare_protocol() {
             if [[ ! $is_servername ]]; then is_servername=$(domain_pick_for_reality); fi
             if [[ ! $is_servername ]]; then is_servername=$is_random_servername; fi
             if [[ ! $is_private_key ]]; then get_pbk; fi
-            is_json_add="tls:{enabled:true,server_name:\"$is_servername\",reality:{enabled:true,handshake:{server:\"$is_servername\",server_port:443},private_key:\"$is_private_key\",short_id:[\"\"]}}"
+            get_reality_short_id
+            is_json_add="tls:{enabled:true,server_name:\"$is_servername\",reality:{enabled:true,handshake:{server:\"$is_servername\",server_port:443},private_key:\"$is_private_key\",short_id:[\"$is_short_id\"]}}"
             is_users=${is_users/uuid/flow:\"xtls-rprx-vision\",uuid}
             json_str="$is_users,$is_json_add"
             ;;
@@ -99,7 +100,8 @@ query_prepare_protocol() {
             if [[ ! $is_servername ]]; then is_servername=$(domain_pick_for_reality); fi
             if [[ ! $is_servername ]]; then is_servername=$is_random_servername; fi
             if [[ ! $is_private_key ]]; then get_pbk; fi
-            is_json_add="tls:{enabled:true,server_name:\"$is_servername\",reality:{enabled:true,handshake:{server:\"$is_servername\",server_port:443},private_key:\"$is_private_key\",short_id:[\"\"]}}"
+            get_reality_short_id
+            is_json_add="tls:{enabled:true,server_name:\"$is_servername\",reality:{enabled:true,handshake:{server:\"$is_servername\",server_port:443},private_key:\"$is_private_key\",short_id:[\"$is_short_id\"]}}"
             if [[ $is_lower =~ "http" ]]; then
                 is_json_add="$is_json_add,transport:{type:\"http\"}"
             else
