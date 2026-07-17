@@ -42,7 +42,7 @@ query_url_qr() {
             fi
             footer_msg
         else
-            link="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${is_url}"
+            link="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=$(query_uri_encode "$is_url")"
             msg "\n------------- $is_config_name & QR code 二维码 -------------"
             msg
             if [[ $(type -P qrencode) ]]; then

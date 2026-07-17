@@ -26,6 +26,12 @@ shfmt -d -i 4 -ci -sr install.sh sing-box.sh src scripts
 echo "[lint] structure"
 scripts/check-structure.sh
 
+echo "[lint] share links"
+bash scripts/check-share-links.sh
+
+echo "[lint] share output"
+bash scripts/test-share-output.sh
+
 echo "[lint] release"
 bash scripts/check-release.sh
 

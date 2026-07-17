@@ -97,6 +97,16 @@ sb status   # 查看运行状态
 | `sb domain test [region] [domain]` | 做健康检查 |
 | `sb domain pick [region]` | 预览自动选择结果 |
 
+### 4.1 节点导出兼容
+
+- VLESS/Reality、VMess、Trojan、Hysteria2、TUIC、Shadowsocks 和 SOCKS 分享内容会统一转义备注、路径和认证信息。
+- Reality 链接包含 `sni`、`pbk`、`sid` 和 `fp`；域名 TLS 节点显式包含 SNI。
+- Hysteria2 使用官方 `pinSHA256`。无域名/自签证书 Trojan、TUIC 和 VMess-QUIC 会附带 v2rayN/Xray 识别的 `pcs` 固定指纹，并保留旧客户端需要的 `insecure=1`。
+- sing-box 没有通用分享字段的固定指纹会由 `sb info <配置名>` 输出为 `certificate_public_key_sha256` 配置片段。
+- 脚本更新后，客户端中已经导入的旧节点不会自动刷新；请重新运行 `sb url <配置名>` 或重新生成订阅后导入。
+
+兼容实现参考 [v2rayN 7.23.4](https://github.com/2dust/v2rayN/releases/tag/7.23.4)、[Xray 分享链接规范](https://github.com/XTLS/Xray-core/discussions/716)、[Hysteria2 URI Scheme](https://v2.hysteria.network/docs/developers/URI-Scheme/) 和 [sing-box TLS](https://sing-box.sagernet.org/configuration/shared/tls/)。
+
 ---
 
 ## 5. 仓库结构（开发者必读）
@@ -273,7 +283,7 @@ bash scripts/smoke-reality.sh
 bash scripts/regression-cli.sh
 ```
 
-`regression-cli.sh` 会同时执行 `NO_COLOR=1 sb doctor`、`sb manifest` 和 `sb dry-run uninstall`，用于确认诊断输出、安装清单展示和卸载预演都能在真实环境下正常工作；普通 `sb doctor` 会展示终端颜色样例，并列出需要关注的客户端兼容配置名，方便排查 SSH/终端不显示颜色或协议导入兼容问题。回归脚本也会优先抽查 Trojan、Hysteria2、TUIC、VMess-QUIC 等兼容相关节点的 `info/url` 输出。
+`regression-cli.sh` 会同时执行 `NO_COLOR=1 sb doctor`、`sb manifest` 和 `sb dry-run uninstall`，用于确认诊断输出、安装清单展示和卸载预演都能在真实环境下正常工作；普通 `sb doctor` 会展示终端颜色样例，并检查协议身份字段、TLS 文件和证书固定状态。回归脚本会按“协议 + 传输方式”各抽查一个代表节点的 `info/url` 输出。
 
 如果在一次性测试 VPS 上允许创建快照，运行：
 

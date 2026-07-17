@@ -1,5 +1,15 @@
 # Release Notes
 
+## v26.7.17
+
+### 主要变化
+
+- 按 v2rayN 7.23.4、Xray 分享链接规范、Hysteria2 URI 规范和 sing-box TLS 配置更新节点导出兼容性。
+- Hysteria2 分享链接直接携带 `pinSHA256`；无域名 Trojan、TUIC 和 VMess-QUIC 携带 v2rayN/Xray 可识别的 `pcs` 证书指纹，同时保留旧客户端导入兼容。
+- VLESS、VMess、Trojan、Reality、CFtunnel 等链接统一补齐 SNI、路径和参数转义，Shadowsocks/SOCKS 认证信息改用 URL-safe Base64，中文备注和特殊字符可以安全导入。
+- `sb doctor` 会检查所有节点 JSON、协议身份字段、TLS 证书路径和固定指纹生成状态，并提醒旧客户端重新导入更新后的链接。
+- 本地与 GitHub Actions 新增分享链接结构检查，VPS 回归会按“协议 + 传输方式”抽查代表节点。
+
 ## v26.7.15
 
 ### 主要变化

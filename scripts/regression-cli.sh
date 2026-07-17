@@ -35,11 +35,15 @@ first_config_name() {
     find "$CONF_DIR" -maxdepth 1 -type f -name '*.json' -printf '%f\n' 2> /dev/null | sort | head -n 1
 }
 
-first_compat_config_name() {
-    find "$CONF_DIR" -maxdepth 1 -type f -name '*.json' -printf '%f\n' 2> /dev/null |
-        grep -Ei 'Hysteria2|TUIC|VMess-QUIC|Trojan|VLESS.*REALITY' |
-        sort |
-        head -n 1
+representative_config_names() {
+    local file="" signature=""
+
+    while IFS= read -r file; do
+        signature=$(jq -r '(.inbounds[0].type // "unknown") + ":" + (.inbounds[0].transport.type // "none") + ":" + ((.inbounds[0].tls.reality.enabled // false) | tostring)' "$file" 2> /dev/null || true)
+        printf '%s\t%s\n' "$signature" "$(basename "$file")"
+    done < <(find "$CONF_DIR" -maxdepth 1 -type f -name '*.json' 2> /dev/null | sort) |
+        sort -k1,1 -k2,2 |
+        awk -F '\t' '!seen[$1]++ { print $2 }'
 }
 
 echo "[regression-cli] using command: $SB_BIN"
@@ -74,13 +78,16 @@ else
     echo "[regression-cli] no existing config found under $CONF_DIR; skipping info/url/change dry-run checks"
 fi
 
-compat_config_name="$(first_compat_config_name || true)"
-if [[ -n $compat_config_name && $compat_config_name != "$config_name" ]]; then
+mapfile -t representative_configs < <(representative_config_names || true)
+for representative_config in "${representative_configs[@]}"; do
+    if [[ -z $representative_config || $representative_config == "$config_name" ]]; then
+        continue
+    fi
     echo
-    echo "[regression-cli] found compatibility-focused config: $compat_config_name"
-    run "$SB_BIN" info "$compat_config_name"
-    run "$SB_BIN" url "$compat_config_name"
-fi
+    echo "[regression-cli] checking representative protocol config: $representative_config"
+    run "$SB_BIN" info "$representative_config"
+    run "$SB_BIN" url "$representative_config"
+done
 
 if [[ $ALLOW_WRITES == "1" ]]; then
     echo

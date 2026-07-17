@@ -64,6 +64,23 @@ jobs:
         run: |
           bash scripts/check-structure.sh
 
+  share-links:
+    name: share links
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install export test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Check share link helpers and fields
+        run: |
+          bash scripts/check-share-links.sh
+          bash scripts/test-share-output.sh
+
   release:
     name: release
     runs-on: ubuntu-latest

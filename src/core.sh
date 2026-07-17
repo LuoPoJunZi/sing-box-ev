@@ -19,6 +19,7 @@
 . "$is_sh_dir/src/core/runtime/cron.sh"
 . "$is_sh_dir/src/core/query/protocol.sh"
 . "$is_sh_dir/src/core/query/parse.sh"
+. "$is_sh_dir/src/core/query/uri.sh"
 . "$is_sh_dir/src/core/query/tls_pin.sh"
 . "$is_sh_dir/src/core/query/info.sh"
 . "$is_sh_dir/src/core/query/url.sh"

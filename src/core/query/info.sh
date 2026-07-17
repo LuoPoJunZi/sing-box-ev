@@ -1,13 +1,15 @@
 #!/bin/bash
 
 query_info() {
+    local encoded_remark="" encoded_user="" server_address="" tls_server_name="" uri_query=""
+
     if [[ ! $is_protocol ]]; then get info $1; fi
     is_value_style=$blue
     is_insecure=
-    is_quic_add=
     is_type=
     is_tls_pin_profile=
     is_tls_pin_server_name=
+    query_tls_pin_reset
 
     if [[ -z "$custom_remark" ]]; then
         local tmp_name="${is_config_name%.json}"
@@ -17,13 +19,24 @@ query_info() {
             custom_remark="luopojunzi"
         fi
     fi
+    encoded_remark=$(query_uri_encode "$custom_remark")
+    server_address=$(query_uri_host_name "$is_addr")
+    tls_server_name=$server_address
 
     if [[ $is_config_name =~ "CFtunnel" ]]; then
         is_value_style=$magenta
         is_can_change=(0 2 5)
         is_info_show=(0 1 2 3 4 6 7 8)
         is_info_str=(vless "$host" "443" $uuid ws "$host" "$path" tls)
-        is_url="vless://$uuid@$host:443?encryption=none&security=tls&type=ws&host=$host&path=$path#$custom_remark"
+        query_uri_params_reset
+        query_uri_param encryption none
+        query_uri_param security tls
+        query_uri_param type ws
+        query_uri_param sni "$host"
+        query_uri_param host "$host"
+        query_uri_param path "$path"
+        uri_query=$(query_uri_query)
+        is_url="vless://$(query_uri_encode "$uuid")@$host:443${uri_query}#$encoded_remark"
         net="cftunnel_handled"
     fi
 
@@ -36,15 +49,23 @@ query_info() {
                 is_can_change=(0 1 2 3 5)
                 is_info_show=(0 1 2 3 4 6 7 8)
                 if [[ $is_protocol == 'vmess' ]]; then
-                    is_vmess_url=$(jq -c "{v:2,ps:\"$custom_remark\",add:\"$is_addr\",port:\"$is_https_port\",id:\"$uuid\",aid:\"0\",net:\"$net\",host:\"$host\",path:\"$path\",tls:\"tls\"}" <<< {})
-                    is_url=vmess://$(echo -n $is_vmess_url | base64 -w 0)
+                    is_vmess_url=$(jq -cn --arg ps "$custom_remark" --arg add "$server_address" --arg port "$is_https_port" --arg id "$uuid" --arg net "$net" --arg host "$host" --arg path "$path" '{v:2,ps:$ps,add:$add,port:$port,id:$id,aid:"0",net:$net,type:"none",host:$host,path:$path,tls:"tls",sni:$host}')
+                    is_url="vmess://$(printf '%s' "$is_vmess_url" | base64 -w 0)"
                 else
                     if [[ $is_protocol == "trojan" ]]; then
                         uuid=$password
                         is_can_change=(0 1 2 3 4)
                         is_info_show=(0 1 2 10 4 6 7 8)
                     fi
-                    is_url="$is_protocol://$uuid@$is_addr:$is_https_port?encryption=none&security=tls&type=$net&host=$host&path=$path#$custom_remark"
+                    query_uri_params_reset
+                    if [[ $is_protocol == "vless" ]]; then query_uri_param encryption none; fi
+                    query_uri_param security tls
+                    query_uri_param type "$net"
+                    query_uri_param sni "$host"
+                    query_uri_param host "$host"
+                    query_uri_param path "$path"
+                    uri_query=$(query_uri_query)
+                    is_url="$is_protocol://$(query_uri_encode "$uuid")@$is_addr:$is_https_port${uri_query}#$encoded_remark"
                 fi
                 if [[ $is_caddy ]]; then is_can_change+=(11); fi
                 is_info_str=($is_protocol $is_addr $is_https_port $uuid $net $host $path 'tls')
@@ -63,49 +84,79 @@ query_info() {
                 if [[ $net == "quic" ]]; then
                     is_insecure=1
                     is_tls_pin_profile=vmess-quic
-                    is_tls_pin_server_name=$is_addr
+                    is_tls_pin_server_name=$tls_server_name
                     is_info_show+=(8 9 20)
                     is_info_str+=(tls h3 true)
-                    is_quic_add=",tls:\"tls\",alpn:\"h3\""
+                    query_tls_pin_prepare
                 fi
-                is_vmess_url=$(jq -c "{v:2,ps:\"$custom_remark\",add:\"$is_addr\",port:\"$port\",id:\"$uuid\",aid:\"0\",net:\"$net\",type:\"$is_type\"$is_quic_add}" <<< {})
-                is_url=vmess://$(echo -n $is_vmess_url | base64 -w 0)
+                if [[ $net == "quic" ]]; then
+                    is_vmess_url=$(jq -cn --arg ps "$custom_remark" --arg add "$server_address" --arg port "$port" --arg id "$uuid" --arg net "$net" --arg type "$is_type" --arg sni "$tls_server_name" --arg pcs "$tls_pin_cert_sha256_hex" '{v:2,ps:$ps,add:$add,port:$port,id:$id,aid:"0",net:$net,type:$type,tls:"tls",sni:$sni,alpn:"h3",insecure:"1",pcs:$pcs}')
+                else
+                    is_vmess_url=$(jq -cn --arg ps "$custom_remark" --arg add "$server_address" --arg port "$port" --arg id "$uuid" --arg net "$net" --arg type "$is_type" '{v:2,ps:$ps,add:$add,port:$port,id:$id,aid:"0",net:$net,type:$type}')
+                fi
+                is_url="vmess://$(printf '%s' "$is_vmess_url" | base64 -w 0)"
             fi
             ;;
         ss)
             is_can_change=(0 1 4 6)
             is_info_show=(0 1 2 10 11)
-            is_url="ss://$(echo -n ${ss_method}:${ss_password} | base64 -w 0)@${is_addr}:${port}#$custom_remark"
+            encoded_user=$(query_uri_base64url "${ss_method}:${ss_password}")
+            is_url="ss://${encoded_user}@${is_addr}:${port}#$encoded_remark"
             is_info_str=($is_protocol $is_addr $port $ss_password $ss_method)
             ;;
         trojan)
             is_insecure=1
             is_tls_pin_profile=trojan-self-signed
-            is_tls_pin_server_name=$is_addr
+            is_tls_pin_server_name=$tls_server_name
             is_can_change=(0 1 4)
             is_info_show=(0 1 2 10 4 8 20)
-            is_url="$is_protocol://$password@$is_addr:$port?type=tcp&security=tls&allowInsecure=1#$custom_remark"
+            query_tls_pin_prepare
+            query_uri_params_reset
+            query_uri_param type tcp
+            query_uri_param security tls
+            query_uri_param sni "$tls_server_name"
+            query_uri_param insecure 1
+            query_uri_param allowInsecure 1
+            query_uri_param pcs "$tls_pin_cert_sha256_hex"
+            uri_query=$(query_uri_query)
+            is_url="$is_protocol://$(query_uri_encode "$password")@$is_addr:$port${uri_query}#$encoded_remark"
             is_info_str=($is_protocol $is_addr $port $password tcp tls true)
             ;;
         hy*)
             is_tls_pin_profile=hysteria2
-            is_tls_pin_server_name=$is_addr
+            is_tls_pin_server_name=$tls_server_name
             is_can_change=(0 1 4)
             is_info_show=(0 1 2 10 8 9 20)
-            is_url="$is_protocol://$password@$is_addr:$port?alpn=h3&insecure=1#$custom_remark"
+            query_tls_pin_prepare
+            query_uri_params_reset
+            query_uri_param sni "$tls_server_name"
+            query_uri_param alpn h3
+            query_uri_param insecure 1
+            query_uri_param pinSHA256 "$tls_pin_cert_sha256_hex"
+            uri_query=$(query_uri_query)
+            is_url="$is_protocol://$(query_uri_encode "$password")@$is_addr:$port/${uri_query}#$encoded_remark"
             is_info_str=($is_protocol $is_addr $port $password tls h3 true)
             ;;
         tuic)
             is_insecure=1
             is_tls_pin_profile=tuic
-            is_tls_pin_server_name=$is_addr
+            is_tls_pin_server_name=$tls_server_name
             is_can_change=(0 1 4 5)
             is_info_show=(0 1 2 3 10 8 9 20 21)
-            is_url="$is_protocol://$uuid:$password@$is_addr:$port?alpn=h3&allow_insecure=1&congestion_control=bbr#$custom_remark"
+            query_tls_pin_prepare
+            query_uri_params_reset
+            query_uri_param sni "$tls_server_name"
+            query_uri_param alpn h3
+            query_uri_param insecure 1
+            query_uri_param allow_insecure 1
+            query_uri_param pcs "$tls_pin_cert_sha256_hex"
+            query_uri_param congestion_control bbr
+            uri_query=$(query_uri_query)
+            encoded_user=$(query_uri_encode "$uuid:$password")
+            is_url="$is_protocol://${encoded_user}@$is_addr:$port${uri_query}#$encoded_remark"
             is_info_str=($is_protocol $is_addr $port $uuid $password tls h3 true bbr)
             ;;
         reality)
-            local is_reality_sid_param=""
             is_value_style=$magenta
             is_can_change=(0 1 5 9 10)
             is_info_show=(0 1 2 3 15 4 8 16 17 18)
@@ -120,9 +171,18 @@ query_info() {
             if [[ $is_short_id ]]; then
                 is_info_show+=(22)
                 is_info_str+=("$is_short_id")
-                is_reality_sid_param="&sid=$is_short_id"
             fi
-            is_url="$is_protocol://$uuid@$is_addr:$port?encryption=none&security=reality&flow=$is_flow&type=$is_net_type&sni=$is_servername&pbk=$is_public_key&fp=chrome$is_reality_sid_param#$custom_remark"
+            query_uri_params_reset
+            query_uri_param encryption none
+            query_uri_param security reality
+            query_uri_param flow "$is_flow"
+            query_uri_param type "$is_net_type"
+            query_uri_param sni "$is_servername"
+            query_uri_param pbk "$is_public_key"
+            query_uri_param fp chrome
+            query_uri_param sid "$is_short_id"
+            uri_query=$(query_uri_query)
+            is_url="$is_protocol://$(query_uri_encode "$uuid")@$is_addr:$port${uri_query}#$encoded_remark"
             ;;
         direct)
             is_can_change=(0 1 7 8)
@@ -133,7 +193,8 @@ query_info() {
             is_can_change=(0 1 12 4)
             is_info_show=(0 1 2 19 10)
             is_info_str=($is_protocol $is_addr $port $is_socks_user $is_socks_pass)
-            is_url="socks://$(echo -n ${is_socks_user}:${is_socks_pass} | base64 -w 0)@${is_addr}:${port}#$custom_remark"
+            encoded_user=$(query_uri_base64url "${is_socks_user}:${is_socks_pass}")
+            is_url="socks://${encoded_user}@${is_addr}:${port}#$encoded_remark"
             ;;
     esac
 

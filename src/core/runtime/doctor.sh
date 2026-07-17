@@ -161,9 +161,11 @@ runtime_doctor_join_limited() {
 }
 
 runtime_doctor_client_compat() {
-    local conf_file="" conf_name="" inbound_type="" transport_type=""
-    local trojan_count=0 hysteria2_count=0 tuic_count=0 vmess_quic_count=0 affected_count=0
-    local conf_files=()
+    local conf_file="" conf_name="" inbound_type="" transport_type="" tls_enabled="" reality_enabled=""
+    local certificate_path="" key_path="" credential_ok=""
+    local export_count=0 direct_count=0 invalid_count=0 field_issue_count=0 tls_issue_count=0
+    local trojan_count=0 hysteria2_count=0 tuic_count=0 vmess_quic_count=0 pinned_count=0
+    local conf_files=() invalid_items=() field_items=() tls_items=() unsupported_items=()
     local trojan_items=() hysteria2_items=() tuic_items=() vmess_quic_items=()
 
     if [[ ! -d $is_conf_dir ]]; then
@@ -183,12 +185,63 @@ runtime_doctor_client_compat() {
 
     for conf_file in "${conf_files[@]}"; do
         conf_name=$(basename "$conf_file")
+        if ! jq -e empty "$conf_file" > /dev/null 2>&1; then
+            ((invalid_count++))
+            invalid_items+=("$conf_name")
+            continue
+        fi
+
         inbound_type=$(jq -r '.inbounds[0].type // ""' "$conf_file" 2> /dev/null)
         transport_type=$(jq -r '.inbounds[0].transport.type // ""' "$conf_file" 2> /dev/null)
+        tls_enabled=$(jq -r '.inbounds[0].tls.enabled // false' "$conf_file" 2> /dev/null)
+        reality_enabled=$(jq -r '.inbounds[0].tls.reality.enabled // false' "$conf_file" 2> /dev/null)
+        credential_ok=1
+
+        case $inbound_type in
+            vless | vmess)
+                jq -e '.inbounds[0].users[0].uuid | strings | length > 0' "$conf_file" > /dev/null 2>&1 || credential_ok=0
+                ;;
+            trojan | hysteria2)
+                jq -e '.inbounds[0].users[0].password | strings | length > 0' "$conf_file" > /dev/null 2>&1 || credential_ok=0
+                ;;
+            tuic)
+                jq -e '(.inbounds[0].users[0].uuid | strings | length > 0) and (.inbounds[0].users[0].password | strings | length > 0)' "$conf_file" > /dev/null 2>&1 || credential_ok=0
+                ;;
+            shadowsocks)
+                jq -e '(.inbounds[0].method | strings | length > 0) and (.inbounds[0].password | strings | length > 0)' "$conf_file" > /dev/null 2>&1 || credential_ok=0
+                ;;
+            socks)
+                jq -e '(.inbounds[0].users[0].username | strings | length > 0) and (.inbounds[0].users[0].password | strings | length > 0)' "$conf_file" > /dev/null 2>&1 || credential_ok=0
+                ;;
+            direct)
+                ((direct_count++))
+                ;;
+            *) unsupported_items+=("$conf_name:$inbound_type") ;;
+        esac
+
+        if [[ $inbound_type != "direct" && $inbound_type ]]; then
+            ((export_count++))
+        fi
+        if [[ $credential_ok -eq 0 ]]; then
+            ((field_issue_count++))
+            field_items+=("$conf_name")
+        fi
+
+        if [[ $tls_enabled == "true" && $reality_enabled != "true" ]]; then
+            certificate_path=$(jq -r '.inbounds[0].tls.certificate_path // ""' "$conf_file" 2> /dev/null)
+            key_path=$(jq -r '.inbounds[0].tls.key_path // ""' "$conf_file" 2> /dev/null)
+            if [[ -z $certificate_path || -z $key_path || ! -f $certificate_path || ! -f $key_path ]]; then
+                ((tls_issue_count++))
+                tls_items+=("$conf_name")
+            fi
+        fi
+
         case $inbound_type in
             trojan)
-                ((trojan_count++))
-                trojan_items+=("$conf_name")
+                if [[ -z $transport_type ]]; then
+                    ((trojan_count++))
+                    trojan_items+=("$conf_name")
+                fi
                 ;;
             hysteria2)
                 ((hysteria2_count++))
@@ -207,28 +260,61 @@ runtime_doctor_client_compat() {
         esac
     done
 
-    affected_count=$((hysteria2_count + tuic_count + vmess_quic_count))
+    if [[ $invalid_count -gt 0 ]]; then
+        runtime_doctor_warn "协议导出: $invalid_count 个 JSON 配置无法解析"
+        msg "  - 配置: $(runtime_doctor_join_limited 6 "${invalid_items[@]}")"
+    fi
+    if [[ $field_issue_count -gt 0 ]]; then
+        runtime_doctor_warn "协议导出: $field_issue_count 个配置缺少 UUID、密码或加密方法"
+        msg "  - 配置: $(runtime_doctor_join_limited 6 "${field_items[@]}")"
+    else
+        runtime_doctor_ok "协议导出: $export_count 个可分享节点的身份字段完整"
+    fi
+    if [[ $tls_issue_count -gt 0 ]]; then
+        runtime_doctor_warn "TLS 配置: $tls_issue_count 个节点的证书或私钥文件缺失"
+        msg "  - 配置: $(runtime_doctor_join_limited 6 "${tls_items[@]}")"
+    else
+        runtime_doctor_ok "TLS 配置: 已启用 TLS 的节点证书路径可读"
+    fi
+    if [[ ${#unsupported_items[@]} -gt 0 ]]; then
+        runtime_doctor_warn "协议导出: 发现当前脚本未识别的入站类型"
+        msg "  - 配置: $(runtime_doctor_join_limited 6 "${unsupported_items[@]}")"
+    fi
+    if [[ $direct_count -gt 0 ]]; then
+        runtime_doctor_info "协议导出: direct 入站 $direct_count 个仅用于端口转发，不生成代理分享链接"
+    fi
+
+    pinned_count=$((trojan_count + hysteria2_count + tuic_count + vmess_quic_count))
+    if [[ $pinned_count -gt 0 ]]; then
+        query_tls_pin_reset
+        query_tls_pin_prepare
+        if [[ $tls_pin_error ]]; then
+            runtime_doctor_warn "证书固定: $tls_pin_error"
+        else
+            runtime_doctor_ok "证书固定: 可为 $pinned_count 个自签证书节点生成分享指纹"
+            runtime_doctor_info "证书 SHA256: $tls_pin_cert_sha256_hex"
+        fi
+    fi
     if [[ $trojan_count -gt 0 ]]; then
-        runtime_doctor_info "客户端兼容: Trojan $trojan_count 个，按项目策略保留无域名/自签证书兼容"
+        runtime_doctor_info "Trojan: $trojan_count 个无域名/自签证书节点使用 insecure=1 + pcs"
         msg "  - Trojan: $(runtime_doctor_join_limited 6 "${trojan_items[@]}")"
     fi
-    if [[ $affected_count -gt 0 ]]; then
-        runtime_doctor_warn "客户端兼容: 发现 $affected_count 个节点建议迁移到证书固定指纹"
+    if [[ $pinned_count -gt 0 ]]; then
         if [[ $hysteria2_count -gt 0 ]]; then
             msg "  - Hysteria2: $(runtime_doctor_join_limited 6 "${hysteria2_items[@]}")"
-            msg "    建议: 使用 pinSHA256，关闭 insecure"
+            msg "    导出: 官方 pinSHA256；自签证书保留 insecure=1"
         fi
         if [[ $tuic_count -gt 0 ]]; then
             msg "  - TUIC: $(runtime_doctor_join_limited 6 "${tuic_items[@]}")"
-            msg "    建议: 使用 certificate_public_key_sha256，关闭 insecure"
+            msg "    导出: v2rayN/Xray 使用 pcs；sing-box 使用配置片段中的公钥指纹"
         fi
         if [[ $vmess_quic_count -gt 0 ]]; then
             msg "  - VMess-QUIC: $(runtime_doctor_join_limited 6 "${vmess_quic_items[@]}")"
-            msg "    建议: 使用 pinnedPeerCertSha256，或迁移到 Reality/CFtunnel"
+            msg "    导出: VMess JSON 携带 pcs；长期仍建议迁移到 Reality/CFtunnel"
         fi
-        msg "  - 处理顺序: 先运行 sb info <配置名> 查看指纹，再在客户端关闭跳过证书验证"
+        runtime_doctor_info "已导入客户端的旧节点不会自动更新，请重新运行 sb url <配置名> 并重新导入"
     else
-        runtime_doctor_ok "客户端兼容: 未发现 Hysteria2/TUIC/VMess-QUIC 指纹迁移风险"
+        runtime_doctor_ok "证书固定: 未发现需要自签证书分享指纹的节点"
     fi
 }
 

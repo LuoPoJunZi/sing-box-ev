@@ -98,6 +98,16 @@ sb status
 | `sb domain test [region] [domain]` | Run health checks |
 | `sb domain pick [region]` | Preview selected domain |
 
+### 4.1 Share-Link Compatibility
+
+- VLESS/Reality, VMess, Trojan, Hysteria2, TUIC, Shadowsocks, and SOCKS exports consistently escape remarks, paths, and credentials.
+- Reality links include `sni`, `pbk`, `sid`, and `fp`; domain TLS links include an explicit SNI.
+- Hysteria2 uses the official `pinSHA256` field. Domainless/self-signed Trojan, TUIC, and VMess-QUIC exports include the v2rayN/Xray `pcs` certificate pin while retaining `insecure=1` for older importers.
+- Where sing-box has no common share-link field, `sb info <config>` prints a `certificate_public_key_sha256` client snippet.
+- Previously imported client profiles are not updated automatically. Run `sb url <config>` again or regenerate the subscription and re-import it after upgrading the script.
+
+The compatibility implementation follows [v2rayN 7.23.4](https://github.com/2dust/v2rayN/releases/tag/7.23.4), the [Xray share-link proposal](https://github.com/XTLS/Xray-core/discussions/716), the [Hysteria2 URI Scheme](https://v2.hysteria.network/docs/developers/URI-Scheme/), and [sing-box TLS](https://sing-box.sagernet.org/configuration/shared/tls/).
+
 ---
 
 ## 5. Repository Structure (Developer)
@@ -267,7 +277,7 @@ For read-only CLI checks:
 bash scripts/regression-cli.sh
 ```
 
-`regression-cli.sh` also runs `NO_COLOR=1 sb doctor`, `sb manifest`, and `sb dry-run uninstall` to ensure diagnostics, manifest display, and uninstall preview work in real environments. Regular `sb doctor` prints a terminal color sample and lists client-compatibility config names, helping diagnose SSH/client color issues and protocol import risks. The regression script also prioritizes `info/url` checks for Trojan, Hysteria2, TUIC, and VMess-QUIC when such configs exist.
+`regression-cli.sh` also runs `NO_COLOR=1 sb doctor`, `sb manifest`, and `sb dry-run uninstall` to ensure diagnostics, manifest display, and uninstall preview work in real environments. Regular `sb doctor` prints a terminal color sample and checks protocol credentials, TLS files, and certificate-pin readiness. The regression script samples one `info/url` export for each protocol and transport combination.
 
 On a disposable VPS where snapshot creation is allowed:
 
